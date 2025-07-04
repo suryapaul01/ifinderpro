@@ -312,15 +312,48 @@ async def get_user_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_user_shared(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        # Extract the shared user information
-        users_shared = update.message.users_shared
-        if not users_shared or not users_shared.user_ids:
+        # Debug: Log message attributes
+        logger.info(f"Message attributes: {[attr for attr in dir(update.message) if 'shared' in attr.lower()]}")
+
+        # Extract the shared user information with compatibility handling
+        user_id = None
+
+        # Try different attribute names for compatibility
+        if hasattr(update.message, 'users_shared') and update.message.users_shared:
+            users_shared = update.message.users_shared
+            logger.info(f"Found users_shared. Attributes: {dir(users_shared)}")
+
+            # Try different attribute names
+            if hasattr(users_shared, 'user_ids') and users_shared.user_ids:
+                user_id = users_shared.user_ids[0]
+                logger.info(f"Got user_id from user_ids: {user_id}")
+            elif hasattr(users_shared, 'users') and users_shared.users:
+                user_obj = users_shared.users[0]
+                user_id = user_obj.user_id if hasattr(user_obj, 'user_id') else user_obj
+                logger.info(f"Got user_id from users: {user_id}")
+            elif hasattr(users_shared, 'user_id'):
+                user_id = users_shared.user_id
+                logger.info(f"Got user_id directly: {user_id}")
+
+        elif hasattr(update.message, 'user_shared') and update.message.user_shared:
+            # Single user shared (older API)
+            user_shared = update.message.user_shared
+            logger.info(f"Found user_shared. Attributes: {dir(user_shared)}")
+
+            if hasattr(user_shared, 'user_id'):
+                user_id = user_shared.user_id
+                logger.info(f"Got user_id from user_shared.user_id: {user_id}")
+            elif hasattr(user_shared, 'user_ids'):
+                user_id = user_shared.user_ids[0]
+                logger.info(f"Got user_id from user_shared.user_ids: {user_id}")
+
+        if not user_id:
+            logger.error("Could not extract user ID from shared user data")
+            logger.error(f"Available message attributes: {[attr for attr in dir(update.message) if not attr.startswith('_')]}")
             await update.message.reply_text("Error: No user was shared.", reply_markup=MAIN_KEYBOARD)
             return SELECTING_ENTITY
-        
-        # Get the first user ID (we'll only process the first one if multiple are shared)
-        user_id = users_shared.user_ids[0]
-        logger.warning(f"User shared with ID: {user_id}")
+
+        logger.info(f"Successfully extracted user ID: {user_id}")
         
         try:
             # Get user information

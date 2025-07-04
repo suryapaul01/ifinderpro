@@ -143,12 +143,18 @@ EOF
     read -p "Press Enter after you've configured config.py..."
 fi
 
-# Test bot
-print_status "Testing bot configuration..."
-timeout 10s python3 bot.py || {
-    print_warning "Bot test failed or timed out. This might be normal if the bot is waiting for updates."
-    print_status "You can test manually later with: python3 bot.py"
-}
+# Run compatibility check
+print_status "Running compatibility check..."
+python3 debug_version.py
+
+# Test basic bot functionality
+print_status "Testing basic bot functionality..."
+if timeout 5s python3 test_bot.py &>/dev/null; then
+    print_status "✅ Basic bot test passed"
+else
+    print_warning "⚠️ Basic bot test failed - this might be normal"
+    print_status "You can test manually with: python3 test_bot.py"
+fi
 
 # Create systemd service
 print_status "Creating systemd service..."
