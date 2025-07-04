@@ -81,28 +81,17 @@ ADMIN_KEYBOARD = ReplyKeyboardMarkup([
     [KeyboardButton(text="🔙 Back to Main")]
 ], resize_keyboard=True)
 
-# Add to Group keyboard - for /add command
+# Add to Group keyboard - for /add command (simplified to one button)
 ADD_KEYBOARD = ReplyKeyboardMarkup([
     [
         KeyboardButton(
-            text="👥 Add to Group",
+            text="➕ Add Bot to Group/Channel",
             request_chat=KeyboardButtonRequestChat(
                 request_id=7,
-                chat_is_channel=False,
+                chat_is_channel=None,  # Allow both groups and channels
                 chat_is_forum=None,
                 chat_has_username=None,
-                chat_is_created=True,
-                user_administrator_rights={"can_invite_users": True}
-            )
-        ),
-        KeyboardButton(
-            text="📢 Add to Channel",
-            request_chat=KeyboardButtonRequestChat(
-                request_id=8,
-                chat_is_channel=True,
-                chat_is_forum=None,
-                chat_has_username=None,
-                chat_is_created=True,
+                chat_is_created=None,  # Allow existing chats
                 user_administrator_rights={"can_invite_users": True}
             )
         )
@@ -223,21 +212,30 @@ async def username_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         # Try to get info about the username
         try:
-            info = await resolve_username_or_link(context.application, '@' + username)
+            # Try resolving with the username as provided
+            info = await resolve_username_or_link(context.application, username)
             if info:
                 text = format_entity_response(info)
                 await update.message.reply_text(text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
             else:
                 await update.message.reply_text(
-                    f"❌ Could not find information for username @{username}.\n"
-                    f"Make sure the username exists and is public.",
+                    f"❌ Could not find information for username @{username}.\n\n"
+                    f"<b>Possible reasons:</b>\n"
+                    f"• Username doesn't exist\n"
+                    f"• User/channel/group is private\n"
+                    f"• Username was recently changed\n"
+                    f"• Bot doesn't have access to this entity\n\n"
+                    f"<b>Tips:</b>\n"
+                    f"• Make sure the username is spelled correctly\n"
+                    f"• Try forwarding a message from the user instead",
+                    parse_mode='HTML',
                     reply_markup=MAIN_KEYBOARD
                 )
         except Exception as e:
             logger.error(f"Error in username_command: {e}")
             await update.message.reply_text(
                 f"❌ Error processing username @{username}.\n"
-                f"Please make sure it's a valid username.",
+                f"Please make sure it's a valid username and try again.",
                 reply_markup=MAIN_KEYBOARD
             )
         return SELECTING_ENTITY
@@ -268,21 +266,29 @@ async def handle_username_input(update: Update, context: ContextTypes.DEFAULT_TY
     
     # Try to get info about the username
     try:
-        info = await resolve_username_or_link(context.application, '@' + username)
+        info = await resolve_username_or_link(context.application, username)
         if info:
             text = format_entity_response(info)
             await update.message.reply_text(text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
         else:
             await update.message.reply_text(
-                f"❌ Could not find information for username @{username}.\n"
-                f"Make sure the username exists and is public.",
+                f"❌ Could not find information for username @{username}.\n\n"
+                f"<b>Possible reasons:</b>\n"
+                f"• Username doesn't exist\n"
+                f"• User/channel/group is private\n"
+                f"• Username was recently changed\n"
+                f"• Bot doesn't have access to this entity\n\n"
+                f"<b>Tips:</b>\n"
+                f"• Make sure the username is spelled correctly\n"
+                f"• Try forwarding a message from the user instead",
+                parse_mode='HTML',
                 reply_markup=MAIN_KEYBOARD
             )
     except Exception as e:
         logger.error(f"Error in handle_username_input: {e}")
         await update.message.reply_text(
             f"❌ Error processing username @{username}.\n"
-            f"Please make sure it's a valid username.",
+            f"Please make sure it's a valid username and try again.",
             reply_markup=MAIN_KEYBOARD
         )
     return SELECTING_ENTITY
@@ -397,18 +403,25 @@ async def handle_chat_shared(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 text += f"\n\n<b>Note:</b> You are an administrator in this {entity_type.lower()}."
                 keyboard = ADMIN_KEYBOARD
             elif is_add_request:
-                # Create a deep link to add the bot to the group/channel
+                # For /add command, directly provide the invite link
                 bot_username = (await context.bot.get_me()).username
-                invite_link = f"https://t.me/{bot_username}?startgroup={chat_id}"
-                
-                text += f"\n\n<b>Click the button below to add the bot to this {entity_type.lower()}:</b>"
-                
-                # Send message with inline button to add the bot
+
+                # Create appropriate invite link based on entity type
+                if entity_type.lower() == "channel":
+                    invite_link = f"https://t.me/{bot_username}?startchannel&admin=post_messages+edit_messages+delete_messages"
+                else:
+                    invite_link = f"https://t.me/{bot_username}?startgroup&admin=delete_messages+restrict_members"
+
+                # Send success message with direct invite link
+                chat_name = getattr(chat, 'title', 'Unknown')
                 await update.message.reply_text(
-                    text,
+                    f"✅ <b>Ready to Add Bot!</b>\n\n"
+                    f"📋 <b>Selected {entity_type}:</b> {chat_name}\n"
+                    f"🆔 <b>ID:</b> <code>{chat_id}</code>\n\n"
+                    f"🚀 <b>Click the button below to add the bot:</b>",
                     parse_mode='HTML',
                     reply_markup=InlineKeyboardMarkup([
-                        [InlineKeyboardButton(f"➕ Add to {entity_type}", url=invite_link)]
+                        [InlineKeyboardButton(f"➕ Add Bot to {entity_type}", url=invite_link)]
                     ])
                 )
                 return SELECTING_ENTITY
@@ -436,16 +449,24 @@ async def handle_chat_shared(update: Update, context: ContextTypes.DEFAULT_TYPE)
             if is_admin_request:
                 keyboard = ADMIN_KEYBOARD
             elif is_add_request:
-                # Create a deep link to add the bot to the group/channel
+                # For /add command, directly provide the invite link
                 bot_username = (await context.bot.get_me()).username
-                invite_link = f"https://t.me/{bot_username}?startgroup={chat_id}"
-                
-                # Send message with inline button to add the bot
+
+                # Create appropriate invite link based on entity type
+                if entity_type.lower() == "channel":
+                    invite_link = f"https://t.me/{bot_username}?startchannel&admin=post_messages+edit_messages+delete_messages"
+                else:
+                    invite_link = f"https://t.me/{bot_username}?startgroup&admin=delete_messages+restrict_members"
+
+                # Send success message with direct invite link
                 await update.message.reply_text(
-                    text + f"\n\n<b>Click the button below to add the bot:</b>",
+                    f"✅ <b>Ready to Add Bot!</b>\n\n"
+                    f"📋 <b>Selected {entity_type}:</b> {text.split('Name/Title:</b> ')[1].split('<')[0] if 'Name/Title:</b>' in text else 'Unknown'}\n"
+                    f"🆔 <b>ID:</b> <code>{chat_id}</code>\n\n"
+                    f"🚀 <b>Click the button below to add the bot:</b>",
                     parse_mode='HTML',
                     reply_markup=InlineKeyboardMarkup([
-                        [InlineKeyboardButton(f"➕ Add to {entity_type}", url=invite_link)]
+                        [InlineKeyboardButton(f"➕ Add Bot to {entity_type}", url=invite_link)]
                     ])
                 )
                 return SELECTING_ENTITY
@@ -683,10 +704,11 @@ async def add_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /add command to add the bot to a group or channel"""
     await update.message.reply_text(
         "🚀 <b>Add Bot to Group or Channel</b>\n\n"
-        "Select where you want to add this bot:\n\n"
-        "• <b>Group</b>: Select a group where you're an admin\n"
-        "• <b>Channel</b>: Select a channel where you're an admin\n\n"
-        "The bot will be added and configured to show IDs.",
+        "Click the button below to select a group or channel where you want to add this bot.\n\n"
+        "📋 <b>Requirements:</b>\n"
+        "• You must be an admin in the group/channel\n"
+        "• You must have permission to invite users\n\n"
+        "After selecting, the bot will be automatically added to your chosen group/channel.",
         parse_mode='HTML',
         reply_markup=ADD_KEYBOARD
     )

@@ -11,8 +11,12 @@ async def extract_entity_info(message: Message):
     Returns a dict with type, id, username, name/title, verified.
     """
     try:
+        logger.info(f"Extracting entity info from message. Message attributes: {dir(message)}")
+
         # Handle the new forward_origin attribute (Bot API 7.0+)
         if hasattr(message, 'forward_origin') and message.forward_origin:
+            logger.info(f"Found forward_origin: {message.forward_origin}")
+            logger.info(f"Forward origin attributes: {dir(message.forward_origin)}")
             origin_type = message.forward_origin.type
             
             if origin_type == 'user':
@@ -121,22 +125,28 @@ async def extract_entity_info(message: Message):
             logger.info(f"Forward origin attributes: {dir(message.forward_origin)}")
                 
         # Fallback for older versions (deprecated, but kept for compatibility)
+        logger.info("Checking for legacy forward attributes...")
+
         if hasattr(message, 'forward_from') and message.forward_from:
+            logger.info(f"Found forward_from: {message.forward_from}")
             entity = message.forward_from
             entity_type = 'User' if not entity.is_bot else 'Bot'
             name = f"{entity.first_name or ''} {entity.last_name or ''}".strip()
             username = entity.username
-            verified = None
-            
-            return {
+            verified = getattr(entity, 'is_verified', None)
+
+            result = {
                 'type': entity_type,
                 'id': entity.id,
                 'username': username,
                 'name': name,
                 'verified': verified
             }
-            
+            logger.info(f"Extracted from forward_from: {result}")
+            return result
+
         elif hasattr(message, 'forward_from_chat') and message.forward_from_chat:
+            logger.info(f"Found forward_from_chat: {message.forward_from_chat}")
             entity = message.forward_from_chat
             if entity.type == ChatType.CHANNEL:
                 entity_type = 'Channel'
@@ -149,14 +159,29 @@ async def extract_entity_info(message: Message):
             name = entity.title
             username = entity.username
             verified = getattr(entity, 'is_verified', None)
-            
-            return {
+
+            result = {
                 'type': entity_type,
                 'id': entity.id,
                 'username': username,
                 'name': name,
                 'verified': verified
             }
+            logger.info(f"Extracted from forward_from_chat: {result}")
+            return result
+
+        # Check for forward_sender_name (hidden user)
+        elif hasattr(message, 'forward_sender_name') and message.forward_sender_name:
+            logger.info(f"Found forward_sender_name: {message.forward_sender_name}")
+            result = {
+                'type': 'Hidden User',
+                'id': 'Hidden',
+                'username': None,
+                'name': message.forward_sender_name,
+                'verified': None
+            }
+            logger.info(f"Extracted from forward_sender_name: {result}")
+            return result
             
         # If we get here, we couldn't extract any entity info
         logger.warning("Could not extract entity info from message")
@@ -219,9 +244,37 @@ async def resolve_username_or_link(app, text: str):
         return None
         
     try:
-        # Try to get chat info
-        chat = await app.bot.get_chat(username)
-        
+        logger.info(f"Attempting to resolve username: {username}")
+
+        # Try to get chat info using different methods
+        chat = None
+
+        # First try with @ prefix
+        try:
+            chat = await app.bot.get_chat(f"@{username}")
+            logger.info(f"Successfully resolved with @ prefix: @{username}")
+        except Exception as e1:
+            logger.warning(f"Failed to resolve with @ prefix: {e1}")
+
+            # Try without @ prefix
+            try:
+                chat = await app.bot.get_chat(username)
+                logger.info(f"Successfully resolved without @ prefix: {username}")
+            except Exception as e2:
+                logger.warning(f"Failed to resolve without @ prefix: {e2}")
+
+                # Try with numeric ID if it looks like one
+                if username.isdigit() or (username.startswith('-') and username[1:].isdigit()):
+                    try:
+                        chat = await app.bot.get_chat(int(username))
+                        logger.info(f"Successfully resolved as numeric ID: {username}")
+                    except Exception as e3:
+                        logger.error(f"Failed to resolve as numeric ID: {e3}")
+
+        if not chat:
+            logger.error(f"Could not resolve username: {username}")
+            return None
+
         # Determine entity type
         if hasattr(chat, 'type'):
             if chat.type == "channel":
@@ -234,7 +287,7 @@ async def resolve_username_or_link(app, text: str):
                 entity_type = chat.type.capitalize()
         else:
             entity_type = "Bot" if getattr(chat, 'is_bot', False) else "User"
-        
+
         # Get name based on entity type
         if entity_type in ["Channel", "Group"]:
             name = getattr(chat, 'title', None) or "Unknown"
@@ -242,7 +295,7 @@ async def resolve_username_or_link(app, text: str):
             first_name = getattr(chat, 'first_name', '') or ''
             last_name = getattr(chat, 'last_name', '') or ''
             name = f"{first_name} {last_name}".strip() or "Unknown"
-        
+
         info = {
             'type': entity_type,
             'id': chat.id,
@@ -250,9 +303,12 @@ async def resolve_username_or_link(app, text: str):
             'name': name,
             'verified': getattr(chat, 'is_verified', None)
         }
+
+        logger.info(f"Successfully resolved username {username} to: {info}")
         return info
+
     except Exception as e:
-        logger.error(f"Error resolving username or link: {e}")
+        logger.error(f"Unexpected error resolving username or link '{username}': {e}")
         return None
 
 async def get_user_chats(bot, user_id, entity_type):
