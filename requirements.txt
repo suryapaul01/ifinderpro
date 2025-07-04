@@ -1,0 +1,5 @@
+python-telegram-bot[asyncio]>=20.0
+aiosqlite>=0.18.0
+python-dotenv>=1.0.0
+requests>=2.28.0
+pytonlib>=0.0.40  # For TON blockchain integration (optional) 
