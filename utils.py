@@ -201,15 +201,28 @@ async def extract_entity_info(message: Message):
 def format_entity_response(info: dict) -> str:
     if not info:
         return "❌ Could not extract entity info. Please forward a valid message or send a valid username/link."
+
+    # Handle error responses from username resolution
+    if info.get('error'):
+        lines = [
+            f"❌ <b>{info['message']}</b>",
+            f"",
+            f"🔍 <b>Reason:</b> {info['reason']}",
+            f"",
+            f"ℹ️ <b>Explanation:</b>",
+            info['explanation']
+        ]
+        return '\n'.join(lines)
+
     lines = [
         f"✅ <b>Entity Detected:</b> {info['type']}",
         f"🔗 <b>Name/Title:</b> {info['name']}",
     ]
-    
+
     # Only add ID if it's not hidden
     if info['id'] != 'Hidden':
         lines.append(f"🆔 <b>ID:</b> <code>{info['id']}</code>")
-        
+
     if info.get('username'):
         lines.append(f"📎 <b>Username:</b> @{info['username']}")
     if info.get('verified') is not None:
@@ -225,10 +238,10 @@ async def resolve_username_or_link(app, text: str):
     """
     import re
     username = None
-    
+
     # Clean up the input text
     text = text.strip()
-    
+
     if text.startswith('@'):
         username = text[1:]
     else:
@@ -239,54 +252,96 @@ async def resolve_username_or_link(app, text: str):
         else:
             # If no @ and not a link, treat as a raw username
             username = text
-    
+
     if not username:
         return None
-        
+
     try:
         logger.info(f"Attempting to resolve username: {username}")
 
         # Try to get chat info using different methods
         chat = None
+        last_error = None
 
-        # First try with @ prefix
+        # Method 1: Try with @ prefix
         try:
             chat = await app.bot.get_chat(f"@{username}")
             logger.info(f"Successfully resolved with @ prefix: @{username}")
+            logger.info(f"Chat object type: {type(chat)}, attributes: {dir(chat)}")
+            logger.info(f"Chat type: {getattr(chat, 'type', 'No type attribute')}")
+            logger.info(f"Chat is_bot: {getattr(chat, 'is_bot', 'No is_bot attribute')}")
         except Exception as e1:
             logger.warning(f"Failed to resolve with @ prefix: {e1}")
+            last_error = e1
 
-            # Try without @ prefix
+            # Method 2: Try without @ prefix
             try:
                 chat = await app.bot.get_chat(username)
                 logger.info(f"Successfully resolved without @ prefix: {username}")
+                logger.info(f"Chat object type: {type(chat)}, attributes: {dir(chat)}")
+                logger.info(f"Chat type: {getattr(chat, 'type', 'No type attribute')}")
+                logger.info(f"Chat is_bot: {getattr(chat, 'is_bot', 'No is_bot attribute')}")
             except Exception as e2:
                 logger.warning(f"Failed to resolve without @ prefix: {e2}")
+                last_error = e2
 
-                # Try with numeric ID if it looks like one
+                # Method 3: Try with numeric ID if it looks like one
                 if username.isdigit() or (username.startswith('-') and username[1:].isdigit()):
                     try:
                         chat = await app.bot.get_chat(int(username))
                         logger.info(f"Successfully resolved as numeric ID: {username}")
+                        logger.info(f"Chat object type: {type(chat)}, attributes: {dir(chat)}")
+                        logger.info(f"Chat type: {getattr(chat, 'type', 'No type attribute')}")
+                        logger.info(f"Chat is_bot: {getattr(chat, 'is_bot', 'No is_bot attribute')}")
                     except Exception as e3:
                         logger.error(f"Failed to resolve as numeric ID: {e3}")
+                        last_error = e3
 
         if not chat:
-            logger.error(f"Could not resolve username: {username}")
-            return None
+            logger.error(f"Could not resolve username: {username}. Last error: {last_error}")
+            # Return error info instead of None to provide better user feedback
+            return {
+                'error': True,
+                'username': username,
+                'message': f"Unable to resolve @{username}",
+                'reason': "Bot API Limitation",
+                'explanation': (
+                    "The Telegram Bot API can only resolve usernames for:\n"
+                    "• Public channels and groups\n"
+                    "• Public bots\n"
+                    "• Users/groups the bot has previously interacted with\n\n"
+                    "For private users, groups, or bots the bot hasn't interacted with, "
+                    "please forward a message from them instead."
+                ),
+                'original_error': str(last_error)
+            }
 
-        # Determine entity type
+        # Log the chat object for debugging
+        logger.info(f"Chat object details - ID: {chat.id}, Type: {getattr(chat, 'type', 'Unknown')}")
+
+        # Determine entity type with enhanced logic
+        entity_type = "Unknown"
         if hasattr(chat, 'type'):
-            if chat.type == "channel":
+            chat_type = chat.type
+            logger.info(f"Chat type from API: {chat_type}")
+
+            if chat_type == "channel":
                 entity_type = "Channel"
-            elif chat.type in ["group", "supergroup"]:
+            elif chat_type in ["group", "supergroup"]:
                 entity_type = "Group"
-            elif chat.type == "private":
-                entity_type = "Bot" if getattr(chat, 'is_bot', False) else "User"
+            elif chat_type == "private":
+                # For private chats, check if it's a bot
+                is_bot = getattr(chat, 'is_bot', False)
+                entity_type = "Bot" if is_bot else "User"
+                logger.info(f"Private chat detected, is_bot: {is_bot}, entity_type: {entity_type}")
             else:
-                entity_type = chat.type.capitalize()
+                entity_type = chat_type.capitalize()
+                logger.info(f"Unknown chat type: {chat_type}, using capitalized version")
         else:
-            entity_type = "Bot" if getattr(chat, 'is_bot', False) else "User"
+            # Fallback if no type attribute
+            is_bot = getattr(chat, 'is_bot', False)
+            entity_type = "Bot" if is_bot else "User"
+            logger.warning(f"No type attribute found, using is_bot fallback: {is_bot}")
 
         # Get name based on entity type
         if entity_type in ["Channel", "Group"]:
@@ -309,6 +364,9 @@ async def resolve_username_or_link(app, text: str):
 
     except Exception as e:
         logger.error(f"Unexpected error resolving username or link '{username}': {e}")
+        logger.error(f"Exception type: {type(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         return None
 
 async def get_user_chats(bot, user_id, entity_type):

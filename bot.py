@@ -3,7 +3,17 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InlineQ
 from telegram.ext import (Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler, InlineQueryHandler, ConversationHandler, PreCheckoutQueryHandler, ChatMemberHandler)
 from config import BOT_TOKEN, ADMIN_IDS, TON_WALLET
 from utils import extract_entity_info, format_entity_response, resolve_username_or_link, get_user_chats
+from user_db import user_db
 import uuid
+from datetime import datetime
+
+# Import group commands
+from group_commands import (
+    group_id_command, group_ids_command, whois_command, mentionid_command,
+    group_help_command, warn_command, warnings_command, resetwarn_command,
+    mute_command, unmute_command, kick_command, ban_command, unban_command,
+    pin_command, groupinfo_command, listadmins_command
+)
 
 # Set logging level to only show important messages
 logging.basicConfig(
@@ -13,7 +23,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Conversation states
-SELECTING_ENTITY, SELECTING_CHAT, SELECTING_DONATION_METHOD, SELECTING_STARS_AMOUNT, SELECTING_TON_AMOUNT, WAITING_FOR_USERNAME, WAITING_FOR_MEMBER_USERNAME = range(7)
+SELECTING_ENTITY, SELECTING_CHAT, SELECTING_DONATION_METHOD, SELECTING_STARS_AMOUNT, SELECTING_TON_AMOUNT, WAITING_FOR_USERNAME, WAITING_FOR_MEMBER_USERNAME, NOTIFY_TEXT, NOTIFY_BUTTONS, NOTIFY_CONFIRM = range(10)
 
 # Main keyboard with entity buttons and donate button - always visible
 MAIN_KEYBOARD = ReplyKeyboardMarkup([
@@ -81,23 +91,21 @@ ADMIN_KEYBOARD = ReplyKeyboardMarkup([
     [KeyboardButton(text="🔙 Back to Main")]
 ], resize_keyboard=True)
 
-# Add to Group keyboard - for /add command (simplified to one button)
-ADD_KEYBOARD = ReplyKeyboardMarkup([
+# Add to Group keyboard - for /add command (direct invite link)
+ADD_KEYBOARD = InlineKeyboardMarkup([
     [
-        KeyboardButton(
-            text="➕ Add Bot to Group/Channel",
-            request_chat=KeyboardButtonRequestChat(
-                request_id=7,
-                chat_is_channel=None,  # Allow both groups and channels
-                chat_is_forum=None,
-                chat_has_username=None,
-                chat_is_created=None,  # Allow existing chats
-                user_administrator_rights={"can_invite_users": True}
-            )
+        InlineKeyboardButton(
+            text="➕ Add Bot to Group",
+            url="https://t.me/idfinderpro_bot?startgroup&admin=delete_messages+restrict_members"
         )
     ],
-    [KeyboardButton(text="🔙 Back to Main")]
-], resize_keyboard=True)
+    [
+        InlineKeyboardButton(
+            text="🔙 Back to Main",
+            callback_data="main_menu"
+        )
+    ]
+])
 
 # Donation menu inline keyboard
 DONATION_KEYBOARD = InlineKeyboardMarkup([
@@ -112,11 +120,12 @@ DONATION_KEYBOARD = InlineKeyboardMarkup([
 
 STARS_KEYBOARD = InlineKeyboardMarkup([
     [
+        InlineKeyboardButton("1 ⭐", callback_data='stars_1'),
         InlineKeyboardButton("5 ⭐", callback_data='stars_5'),
         InlineKeyboardButton("10 ⭐", callback_data='stars_10'),
-        InlineKeyboardButton("20 ⭐", callback_data='stars_20'),
     ],
     [
+        InlineKeyboardButton("20 ⭐", callback_data='stars_20'),
         InlineKeyboardButton("50 ⭐", callback_data='stars_50'),
         InlineKeyboardButton("100 ⭐", callback_data='stars_100'),
     ],
@@ -149,7 +158,21 @@ TON_KEYBOARD = InlineKeyboardMarkup([
 ])
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_name = update.effective_user.first_name
+    user = update.effective_user
+    user_name = user.first_name
+
+    # Clear any notification in progress
+    if 'notification' in context.user_data:
+        context.user_data.pop('notification', None)
+
+    # Add user to database
+    user_db.add_user(
+        user_id=user.id,
+        username=user.username,
+        first_name=user.first_name,
+        last_name=user.last_name
+    )
+
     await update.message.reply_text(
         f"👋 Welcome to ID Finder Pro Bot! {user_name}\n\n"
         f"🔍 This bot helps you find the **Telegram ID** of any:\n"
@@ -163,7 +186,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode='Markdown',
         reply_markup=MAIN_KEYBOARD
     )
-    
+
     return SELECTING_ENTITY
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -242,8 +265,18 @@ async def username_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         # If no username provided, ask for it
         await update.message.reply_text(
-            "Please enter a username to get its ID.\n"
-            "Format: @username or just username",
+            "🔍 <b>Username Lookup</b>\n\n"
+            "Please enter a username to get its ID.\n\n"
+            "📋 <b>Supported formats:</b>\n"
+            "• @username (for users, bots, channels, groups)\n"
+            "• username (without @)\n"
+            "• t.me/username links\n\n"
+            "💡 <b>Works for:</b>\n"
+            "✅ Users and Bots\n"
+            "✅ Public Groups\n"
+            "✅ Public Channels\n\n"
+            "Just type the username below:",
+            parse_mode='HTML',
             reply_markup=MAIN_KEYBOARD
         )
         return WAITING_FOR_USERNAME
@@ -613,21 +646,89 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ])
         )
         return SELECTING_ENTITY
-    
+
+    # Notification system callbacks
+    elif query.data == 'notify_add_files':
+        await query.edit_message_text(
+            "📎 <b>Add Files</b>\n\n"
+            "Send files you want to include in the notification:\n"
+            "• Photos (JPEG, PNG, GIF)\n"
+            "• Videos (MP4)\n"
+            "• Documents (PDF, etc.)\n\n"
+            "Send files one by one, or skip to the next step:",
+            parse_mode='HTML',
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔘 Add Buttons", callback_data="notify_add_buttons")],
+                [InlineKeyboardButton("✅ Preview", callback_data="notify_preview")],
+                [InlineKeyboardButton("❌ Cancel", callback_data="notify_cancel")]
+            ])
+        )
+        return NOTIFY_BUTTONS
+
+    elif query.data == 'notify_add_buttons':
+        await query.edit_message_text(
+            "🔘 <b>Add Buttons</b>\n\n"
+            "Send button information in this format:\n"
+            "<code>Button Text | https://example.com</code>\n\n"
+            "Examples:\n"
+            "• Visit Website | https://example.com\n"
+            "• Join Channel | https://t.me/channel\n"
+            "• Download App | https://play.google.com/store\n\n"
+            "Send one button per message:",
+            parse_mode='HTML'
+        )
+        return NOTIFY_BUTTONS
+
+    elif query.data == 'notify_preview':
+        return await handle_notify_preview(update, context)
+
+    elif query.data == 'notify_send':
+        return await send_notification(update, context)
+
+    elif query.data == 'notify_cancel':
+        context.user_data.pop('notification', None)
+        await query.edit_message_text(
+            "❌ Notification cancelled.",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🏠 Main Menu", callback_data="back_to_menu")]
+            ])
+        )
+        return SELECTING_ENTITY
+
     return SELECTING_ENTITY
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
-    
+    user_id = str(update.effective_user.id)
+
+    logger.info(f"handle_message called by user {user_id}")
+    logger.info(f"Message type: text={bool(message.text)}, photo={bool(message.photo)}, forward={bool(hasattr(message, 'forward_origin') and message.forward_origin)}")
+    logger.info(f"User data notification: {context.user_data.get('notification', {})}")
+
+    # Check if admin has notification in progress and handle forwarded messages during notification
+    if user_id in ADMIN_IDS and context.user_data.get('notification', {}).get('in_progress'):
+        logger.info(f"Admin {user_id} has notification in progress")
+        if message and hasattr(message, 'forward_origin') and message.forward_origin:
+            logger.info("Forwarded message detected during notification - showing error")
+            await message.reply_text(
+                "⚠️ <b>Notification Creation in Progress</b>\n\n"
+                "You are currently creating a notification. Forwarded message processing is disabled.\n\n"
+                "Please:\n"
+                "• Complete the notification process, or\n"
+                "• Use /start to restart the bot and cancel notification",
+                parse_mode='HTML'
+            )
+            return SELECTING_ENTITY
+
     # Check if the message is "💰 Donate"
     if message.text == "💰 Donate":
         return await donate_command(update, context)
-    
+
     # Check if the message is "🔙 Back to Main"
     if message.text == "🔙 Back to Main":
         await message.reply_text("Returning to main menu.", reply_markup=MAIN_KEYBOARD)
         return SELECTING_ENTITY
-    
+
     # Handle forwarded messages
     if message and hasattr(message, 'forward_origin') and message.forward_origin:
         try:
@@ -642,7 +743,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             logger.error(f"Error extracting entity info: {e}")
             await message.reply_text("❌ An error occurred while processing the forwarded message.", reply_markup=MAIN_KEYBOARD)
         return SELECTING_ENTITY
-    
+
     # For all other messages, show a helpful message with the main keyboard
     await message.reply_text(
         "Please forward a message from a user, channel, group, or bot to get its ID.\n\n"
@@ -697,11 +798,20 @@ async def handle_successful_payment(update: Update, context: ContextTypes.DEFAUL
     payment_info = update.message.successful_payment
     amount = payment_info.total_amount  # No need to divide by 100 since we're using direct amount
     user_name = update.effective_user.first_name
-    
+
+    # Sweet donation success message
     await update.message.reply_text(
-        f"Thank you for your donation of {amount} stars, {user_name}! ⭐\n\n"
-        f"Your support helps keep this bot running and improving. "
-        f"We appreciate your generosity!",
+        f"🎉 <b>Donation Successful!</b> 🎉\n\n"
+        f"💖 Thank you so much, {user_name}! Your generous donation of {amount} ⭐ stars means the world to us!\n\n"
+        f"🚀 <b>Your contribution helps us:</b>\n"
+        f"• Keep the bot running 24/7\n"
+        f"• Add new amazing features\n"
+        f"• Provide faster and better service\n"
+        f"• Support our development team\n\n"
+        f"🌟 You're now part of our amazing supporter community! We're incredibly grateful for your kindness and support.\n\n"
+        f"💝 <b>With heartfelt thanks,</b>\n"
+        f"The ID Finder Pro Team ❤️",
+        parse_mode='HTML',
         reply_markup=MAIN_KEYBOARD
     )
 
@@ -718,7 +828,385 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_id not in ADMIN_IDS:
         await update.message.reply_text("❌ You are not authorized to use this command.", reply_markup=MAIN_KEYBOARD)
         return SELECTING_ENTITY
-    await update.message.reply_text("📊 Usage stats: (not implemented)", reply_markup=MAIN_KEYBOARD)
+
+    # Get real stats from user database
+    total_users = user_db.get_total_users()
+    recent_users = user_db.get_recent_users(5)
+
+    stats_text = (
+        f"📊 <b>Bot Statistics</b>\n\n"
+        f"👥 Total Users: {total_users}\n"
+        f"📈 Messages Processed: N/A\n"
+        f"🔍 ID Lookups: N/A\n"
+        f"💰 Donations Received: N/A\n\n"
+        f"📅 Recent Users ({len(recent_users)}):\n"
+    )
+
+    for user in recent_users:
+        name = user.get('first_name', 'Unknown')
+        username = user.get('username', '')
+        username_text = f"@{username}" if username else "No username"
+        joined_date = user.get('joined_date', '')[:10] if user.get('joined_date') else 'Unknown'
+        stats_text += f"• {name} ({username_text}) - {joined_date}\n"
+
+    await update.message.reply_text(stats_text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
+    return SELECTING_ENTITY
+
+async def users_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Admin command to view total users and last 10 joined users"""
+    user_id = str(update.effective_user.id)
+    if user_id not in ADMIN_IDS:
+        await update.message.reply_text("❌ You are not authorized to use this command.", reply_markup=MAIN_KEYBOARD)
+        return SELECTING_ENTITY
+
+    total_users = user_db.get_total_users()
+    recent_users = user_db.get_recent_users(10)
+
+    users_text = (
+        f"👥 <b>User Statistics</b>\n\n"
+        f"📊 <b>Total Users:</b> {total_users}\n\n"
+        f"🆕 <b>Last 10 Joined Users:</b>\n"
+    )
+
+    if not recent_users:
+        users_text += "No users found in database."
+    else:
+        for i, user in enumerate(recent_users, 1):
+            name = user.get('first_name', 'Unknown')
+            last_name = user.get('last_name', '')
+            full_name = f"{name} {last_name}".strip()
+            username = user.get('username', '')
+            username_text = f"@{username}" if username else "No username"
+            user_id_text = user.get('user_id', 'Unknown')
+            joined_date = user.get('joined_date', '')
+
+            # Format date
+            if joined_date:
+                try:
+                    date_obj = datetime.fromisoformat(joined_date)
+                    formatted_date = date_obj.strftime("%Y-%m-%d %H:%M")
+                except:
+                    formatted_date = joined_date[:16]
+            else:
+                formatted_date = 'Unknown'
+
+            users_text += f"{i}. <b>{full_name}</b>\n"
+            users_text += f"   ID: <code>{user_id_text}</code>\n"
+            users_text += f"   Username: {username_text}\n"
+            users_text += f"   Joined: {formatted_date}\n\n"
+
+    await update.message.reply_text(users_text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
+    return SELECTING_ENTITY
+
+async def notify_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Admin command to start notification creation process"""
+    user_id = str(update.effective_user.id)
+    if user_id not in ADMIN_IDS:
+        await update.message.reply_text("❌ You are not authorized to use this command.", reply_markup=MAIN_KEYBOARD)
+        return SELECTING_ENTITY
+
+    # Initialize notification data
+    context.user_data['notification'] = {
+        'text': '',
+        'entities': [],  # Store original formatting entities
+        'files': [],
+        'buttons': [],
+        'in_progress': True  # Flag to indicate notification is in progress
+    }
+
+    await update.message.reply_text(
+        "📢 <b>Create Notification</b>\n\n"
+        "Step 1/3: Send your notification content.\n\n"
+        "You can:\n"
+        "• Send text with Telegram formatting (<b>Bold</b>, <i>Italic</i>, <u>Underlined</u>, <s>Strikethrough</s>, <code>Monospace</code>, <a href='url'>Links</a>)\n"
+        "• Send files (photos, videos, documents) with optional caption\n"
+        "• Send both text and files\n\n"
+        "📝 Send your content now:",
+        parse_mode='HTML'
+    )
+    return NOTIFY_TEXT
+
+async def handle_notify_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle notification content input (text and/or files)"""
+    try:
+        message = update.message
+        logger.info(f"handle_notify_text called with message type: {type(message)}")
+
+        # Ensure notification data exists
+        if 'notification' not in context.user_data:
+            logger.error("Notification data not found in context.user_data")
+            await message.reply_text(
+                "❌ Session expired. Please use /notify to start again.",
+                reply_markup=MAIN_KEYBOARD
+            )
+            return SELECTING_ENTITY
+
+        notification = context.user_data['notification']
+        logger.info(f"Current notification data: {notification}")
+
+        # Handle text message
+        if message.text:
+            notification['text'] = message.text
+            notification['entities'] = message.entities or []  # Preserve original formatting
+            content_type = "Text"
+            preview = message.text
+            logger.info(f"Text message processed: {message.text[:50]}...")
+            logger.info(f"Entities preserved: {len(notification['entities'])} formatting entities")
+
+        # Handle photo with optional caption
+        elif message.photo:
+            file_info = {
+                'type': 'photo',
+                'file_id': message.photo[-1].file_id,
+                'caption': message.caption or '',
+                'caption_entities': message.caption_entities or []
+            }
+            notification['files'].append(file_info)
+            notification['text'] = message.caption or ''
+            notification['entities'] = message.caption_entities or []
+            content_type = "Photo"
+            preview = f"📷 Photo with caption: {message.caption}" if message.caption else "📷 Photo (no caption)"
+            logger.info(f"Photo processed with caption: {message.caption}")
+
+        # Handle video with optional caption
+        elif message.video:
+            file_info = {
+                'type': 'video',
+                'file_id': message.video.file_id,
+                'caption': message.caption or '',
+                'caption_entities': message.caption_entities or []
+            }
+            notification['files'].append(file_info)
+            notification['text'] = message.caption or ''
+            notification['entities'] = message.caption_entities or []
+            content_type = "Video"
+            preview = f"🎥 Video with caption: {message.caption}" if message.caption else "🎥 Video (no caption)"
+            logger.info(f"Video processed with caption: {message.caption}")
+
+        # Handle document with optional caption
+        elif message.document:
+            file_info = {
+                'type': 'document',
+                'file_id': message.document.file_id,
+                'filename': message.document.file_name,
+                'caption': message.caption or '',
+                'caption_entities': message.caption_entities or []
+            }
+            notification['files'].append(file_info)
+            notification['text'] = message.caption or ''
+            notification['entities'] = message.caption_entities or []
+            content_type = "Document"
+            preview = f"📎 {file_info['filename']} with caption: {message.caption}" if message.caption else f"📎 {file_info['filename']} (no caption)"
+            logger.info(f"Document processed: {file_info['filename']}")
+
+        else:
+            logger.warning(f"Unsupported message type received")
+            await message.reply_text(
+                "❌ Unsupported content type. Please send:\n"
+                "• Text message\n"
+                "• Photo (with optional caption)\n"
+                "• Video (with optional caption)\n"
+                "• Document (with optional caption)"
+            )
+            return NOTIFY_TEXT
+
+        # Success - show options for next step
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔘 Add Buttons", callback_data="notify_add_buttons")],
+            [InlineKeyboardButton("✅ Preview & Send", callback_data="notify_preview")],
+            [InlineKeyboardButton("❌ Cancel", callback_data="notify_cancel")]
+        ])
+
+        await message.reply_text(
+            f"✅ {content_type} saved!\n\n"
+            f"<b>Preview:</b>\n{preview}\n\n"
+            f"Step 2/3: Add inline buttons (optional)\n"
+            f"Choose an option:",
+            parse_mode='HTML',
+            reply_markup=keyboard
+        )
+        return NOTIFY_BUTTONS
+
+    except Exception as e:
+        logger.error(f"Error in handle_notify_text: {e}")
+        logger.error(f"Exception type: {type(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+
+        await message.reply_text(
+            "❌ An error occurred while processing your content. Please try again or use /start to restart.",
+            reply_markup=MAIN_KEYBOARD
+        )
+        return SELECTING_ENTITY
+
+
+
+async def handle_notify_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle button input for notification"""
+    text = update.message.text
+
+    # Parse button format: "Button Text | https://example.com"
+    if '|' in text:
+        parts = text.split('|', 1)
+        button_text = parts[0].strip()
+        button_url = parts[1].strip()
+
+        if button_text and button_url:
+            button_info = {
+                'text': button_text,
+                'url': button_url
+            }
+            context.user_data['notification']['buttons'].append(button_info)
+
+            await update.message.reply_text(
+                f"🔘 Button added: {button_text}\n\n"
+                f"Add more buttons or continue:",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("✅ Preview", callback_data="notify_preview")],
+                    [InlineKeyboardButton("❌ Cancel", callback_data="notify_cancel")]
+                ])
+            )
+        else:
+            await update.message.reply_text(
+                "❌ Invalid format. Use: Button Text | https://example.com"
+            )
+    else:
+        await update.message.reply_text(
+            "❌ Invalid format. Use: Button Text | https://example.com\n\n"
+            "Example: Visit Website | https://example.com"
+        )
+
+    return NOTIFY_BUTTONS
+
+async def handle_notify_preview(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show notification preview and confirm sending"""
+    query = update.callback_query
+    await query.answer()
+
+    notification = context.user_data.get('notification', {})
+    text = notification.get('text', '')
+    files = notification.get('files', [])
+    buttons = notification.get('buttons', [])
+
+    total_users = user_db.get_total_users()
+
+    # Show button details
+    button_details = ""
+    if buttons:
+        button_details = "\n<b>Buttons:</b>\n"
+        for i, btn in enumerate(buttons, 1):
+            button_details += f"{i}. {btn['text']} → {btn['url']}\n"
+
+    preview_text = (
+        f"📋 <b>Notification Preview</b>\n\n"
+        f"<b>Text:</b>\n{text}\n\n"
+        f"<b>Files:</b> {len(files)} attached\n"
+        f"{button_details}\n"
+        f"<b>Recipients:</b> {total_users} users\n\n"
+        f"Are you sure you want to send this notification?"
+    )
+
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("✅ Send Notification", callback_data="notify_send")],
+        [InlineKeyboardButton("❌ Cancel", callback_data="notify_cancel")]
+    ])
+
+    await query.edit_message_text(preview_text, parse_mode='HTML', reply_markup=keyboard)
+    return NOTIFY_CONFIRM
+
+async def send_notification(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Send notification to all users"""
+    query = update.callback_query
+    await query.answer()
+
+    notification = context.user_data.get('notification', {})
+    text = notification.get('text', '')
+    entities = notification.get('entities', [])  # Original formatting entities
+    files = notification.get('files', [])
+    buttons = notification.get('buttons', [])
+
+    # Create inline keyboard if buttons exist
+    keyboard = None
+    if buttons:
+        button_rows = []
+        for button in buttons:
+            button_rows.append([InlineKeyboardButton(button['text'], url=button['url'])])
+        keyboard = InlineKeyboardMarkup(button_rows)
+
+    # Get all user IDs
+    user_ids = user_db.get_all_user_ids()
+
+    sent_count = 0
+    failed_count = 0
+
+    await query.edit_message_text(
+        f"📤 Starting to send notification to {len(user_ids)} users...",
+        parse_mode='HTML'
+    )
+
+    for user_id in user_ids:
+        try:
+            # Send files with captions if any
+            if files:
+                for file_info in files:
+                    caption = file_info.get('caption', '')
+                    caption_entities = file_info.get('caption_entities', [])
+
+                    if file_info['type'] == 'photo':
+                        await context.bot.send_photo(
+                            user_id,
+                            file_info['file_id'],
+                            caption=caption,
+                            caption_entities=caption_entities,
+                            reply_markup=keyboard
+                        )
+                    elif file_info['type'] == 'video':
+                        await context.bot.send_video(
+                            user_id,
+                            file_info['file_id'],
+                            caption=caption,
+                            caption_entities=caption_entities,
+                            reply_markup=keyboard
+                        )
+                    elif file_info['type'] == 'document':
+                        await context.bot.send_document(
+                            user_id,
+                            file_info['file_id'],
+                            caption=caption,
+                            caption_entities=caption_entities,
+                            reply_markup=keyboard
+                        )
+            else:
+                # Send text message with original formatting entities
+                await context.bot.send_message(
+                    user_id,
+                    text,
+                    entities=entities,  # Use original entities instead of parse_mode
+                    reply_markup=keyboard
+                )
+            sent_count += 1
+
+        except Exception as e:
+            logger.warning(f"Failed to send notification to user {user_id}: {e}")
+            failed_count += 1
+
+    # Clean up notification data
+    context.user_data.pop('notification', None)
+
+    result_text = (
+        f"✅ <b>Notification Sent!</b>\n\n"
+        f"📊 <b>Results:</b>\n"
+        f"• Successfully sent: {sent_count}\n"
+        f"• Failed: {failed_count}\n"
+        f"• Total users: {len(user_ids)}"
+    )
+
+    await context.bot.send_message(
+        query.from_user.id,
+        result_text,
+        parse_mode='HTML',
+        reply_markup=MAIN_KEYBOARD
+    )
     return SELECTING_ENTITY
 
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -733,15 +1221,69 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"Broadcasted: {' '.join(context.args)} (not implemented)", reply_markup=MAIN_KEYBOARD)
     return SELECTING_ENTITY
 
-async def add_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle the /add command to add the bot to a group or channel"""
+async def handle_user_shared_from_other_screen(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle user shared from donation or other non-main screens"""
     await update.message.reply_text(
-        "🚀 <b>Add Bot to Group or Channel</b>\n\n"
-        "Click the button below to select a group or channel where you want to add this bot.\n\n"
+        "⚠️ <b>Feature Not Available Here</b>\n\n"
+        "You tried to share a user, but this feature is only available from the main menu.\n\n"
+        "💡 <b>To use ID finder features:</b>\n"
+        "1. Click the button below to return to main menu\n"
+        "2. Use the main menu options to find IDs\n\n"
+        "Or simply send /start to restart the bot.",
+        parse_mode='HTML',
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("🏠 Back to Main Menu", callback_data="main_menu")]
+        ])
+    )
+    return SELECTING_ENTITY
+
+async def handle_chat_shared_from_other_screen(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle chat shared from donation or other non-main screens"""
+    await update.message.reply_text(
+        "⚠️ <b>Feature Not Available Here</b>\n\n"
+        "You tried to share a group/channel, but this feature is only available from the main menu.\n\n"
+        "💡 <b>To use ID finder features:</b>\n"
+        "1. Click the button below to return to main menu\n"
+        "2. Use the main menu options to find IDs\n\n"
+        "Or simply send /start to restart the bot.",
+        parse_mode='HTML',
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("🏠 Back to Main Menu", callback_data="main_menu")]
+        ])
+    )
+    return SELECTING_ENTITY
+
+async def handle_message_from_other_screen(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle forwarded messages or other content from donation or other non-main screens"""
+    await update.message.reply_text(
+        "⚠️ <b>Feature Not Available Here</b>\n\n"
+        "You tried to use an ID finder feature, but this is only available from the main menu.\n\n"
+        "💡 <b>To use ID finder features:</b>\n"
+        "1. Click the button below to return to main menu\n"
+        "2. Use the main menu options to find IDs\n"
+        "3. Forward messages or share users/groups from there\n\n"
+        "Or simply send /start to restart the bot.",
+        parse_mode='HTML',
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("🏠 Back to Main Menu", callback_data="main_menu")]
+        ])
+    )
+    return SELECTING_ENTITY
+
+async def add_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle the /add command to add the bot to a group"""
+    await update.message.reply_text(
+        "🚀 <b>Add Bot to Group</b>\n\n"
+        "Click the button below to add this bot directly to your group.\n\n"
         "📋 <b>Requirements:</b>\n"
-        "• You must be an admin in the group/channel\n"
-        "• You must have permission to invite users\n\n"
-        "After selecting, the bot will be automatically added to your chosen group/channel.",
+        "• You must be an admin in the group\n"
+        "• You must have permission to invite users\n"
+        "• The bot will be added with delete messages and restrict members permissions\n\n"
+        "💡 <b>How it works:</b>\n"
+        "1. Click the 'Add Bot to Group' button\n"
+        "2. Select the group from your list\n"
+        "3. The bot will be automatically added!\n\n"
+        "No need to send the group back to the bot - it's that simple! 🎉",
         parse_mode='HTML',
         reply_markup=ADD_KEYBOARD
     )
@@ -890,11 +1432,25 @@ def main():
     commands = [
         BotCommand("start", "Start the bot"),
         BotCommand("id", "Get your own ID"),
+        BotCommand("ids", "Get group ID (groups only)"),
         BotCommand("username", "Get ID by username"),
+        BotCommand("whois", "Get user info (groups only)"),
+        BotCommand("mentionid", "Create clickable mention (groups only)"),
         BotCommand("admin", "Show groups/channels you admin"),
         BotCommand("add", "Add bot to your groups"),
         BotCommand("help", "Show help information"),
-        BotCommand("donate", "Support the developer")
+        BotCommand("donate", "Support the developer"),
+        BotCommand("warn", "Warn a user (admin only)"),
+        BotCommand("warnings", "Check user warnings (admin only)"),
+        BotCommand("resetwarn", "Reset user warnings (admin only)"),
+        BotCommand("mute", "Mute a user (admin only)"),
+        BotCommand("unmute", "Unmute a user (admin only)"),
+        BotCommand("kick", "Kick a user (admin only)"),
+        BotCommand("ban", "Ban a user (admin only)"),
+        BotCommand("unban", "Unban a user (admin only)"),
+        BotCommand("pin", "Pin a message (admin only)"),
+        BotCommand("groupinfo", "Show group stats (admin only)"),
+        BotCommand("listadmins", "List group admins (admin only)")
     ]
     
     # Create conversation handler with per_message=False to avoid warnings
@@ -909,6 +1465,7 @@ def main():
             CommandHandler('add', add_command),
             CommandHandler('mem', mem_command),
             CommandHandler('ids', ids_command),
+            CommandHandler('notify', notify_command),
         ],
         states={
             SELECTING_ENTITY: [
@@ -925,18 +1482,38 @@ def main():
             ],
             SELECTING_DONATION_METHOD: [
                 CallbackQueryHandler(menu_callback),
+                MessageHandler(filters.StatusUpdate.USERS_SHARED, handle_user_shared_from_other_screen),
+                MessageHandler(filters.StatusUpdate.CHAT_SHARED, handle_chat_shared_from_other_screen),
+                MessageHandler(filters.ALL & ~filters.COMMAND, handle_message_from_other_screen),
             ],
             SELECTING_STARS_AMOUNT: [
                 CallbackQueryHandler(menu_callback),
+                MessageHandler(filters.StatusUpdate.USERS_SHARED, handle_user_shared_from_other_screen),
+                MessageHandler(filters.StatusUpdate.CHAT_SHARED, handle_chat_shared_from_other_screen),
+                MessageHandler(filters.ALL & ~filters.COMMAND, handle_message_from_other_screen),
             ],
             SELECTING_TON_AMOUNT: [
                 CallbackQueryHandler(menu_callback),
+                MessageHandler(filters.StatusUpdate.USERS_SHARED, handle_user_shared_from_other_screen),
+                MessageHandler(filters.StatusUpdate.CHAT_SHARED, handle_chat_shared_from_other_screen),
+                MessageHandler(filters.ALL & ~filters.COMMAND, handle_message_from_other_screen),
             ],
             WAITING_FOR_USERNAME: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, handle_username_input),
             ],
             WAITING_FOR_MEMBER_USERNAME: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, handle_username_input),
+            ],
+            NOTIFY_TEXT: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_notify_text),
+                MessageHandler(filters.PHOTO | filters.VIDEO | filters.Document.ALL, handle_notify_text),
+            ],
+            NOTIFY_BUTTONS: [
+                CallbackQueryHandler(menu_callback),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_notify_buttons),
+            ],
+            NOTIFY_CONFIRM: [
+                CallbackQueryHandler(menu_callback),
             ],
         },
         fallbacks=[
@@ -949,6 +1526,7 @@ def main():
             CommandHandler('add', add_command),
             CommandHandler('mem', mem_command),
             CommandHandler('ids', ids_command),
+            CommandHandler('notify', notify_command),
         ],
         per_message=False,
     )
@@ -957,8 +1535,30 @@ def main():
     application.add_handler(conv_handler)
     application.add_handler(CommandHandler('admin', admin_panel))
     application.add_handler(CommandHandler('stats', stats))
+    application.add_handler(CommandHandler('users', users_command))
     application.add_handler(CommandHandler('broadcast', broadcast))
     application.add_handler(InlineQueryHandler(inline_query_handler))
+
+    # Add group command handlers
+    # User commands (available to everyone in groups)
+    application.add_handler(CommandHandler('id', group_id_command, filters=filters.ChatType.GROUPS))
+    application.add_handler(CommandHandler('ids', group_ids_command, filters=filters.ChatType.GROUPS))
+    application.add_handler(CommandHandler('whois', whois_command, filters=filters.ChatType.GROUPS))
+    application.add_handler(CommandHandler('mentionid', mentionid_command, filters=filters.ChatType.GROUPS))
+    application.add_handler(CommandHandler('help', group_help_command, filters=filters.ChatType.GROUPS))
+
+    # Admin commands (only for group admins)
+    application.add_handler(CommandHandler('warn', warn_command, filters=filters.ChatType.GROUPS))
+    application.add_handler(CommandHandler('warnings', warnings_command, filters=filters.ChatType.GROUPS))
+    application.add_handler(CommandHandler('resetwarn', resetwarn_command, filters=filters.ChatType.GROUPS))
+    application.add_handler(CommandHandler('mute', mute_command, filters=filters.ChatType.GROUPS))
+    application.add_handler(CommandHandler('unmute', unmute_command, filters=filters.ChatType.GROUPS))
+    application.add_handler(CommandHandler('kick', kick_command, filters=filters.ChatType.GROUPS))
+    application.add_handler(CommandHandler('ban', ban_command, filters=filters.ChatType.GROUPS))
+    application.add_handler(CommandHandler('unban', unban_command, filters=filters.ChatType.GROUPS))
+    application.add_handler(CommandHandler('pin', pin_command, filters=filters.ChatType.GROUPS))
+    application.add_handler(CommandHandler('groupinfo', groupinfo_command, filters=filters.ChatType.GROUPS))
+    application.add_handler(CommandHandler('listadmins', listadmins_command, filters=filters.ChatType.GROUPS))
     
     # Add payment handlers
     application.add_handler(PreCheckoutQueryHandler(handle_pre_checkout_query))

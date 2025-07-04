@@ -1,0 +1,10 @@
+{
+  "-1002462736503": {
+    "warnings": {},
+    "mutes": {},
+    "settings": {
+      "max_warnings": 3,
+      "auto_action": "mute"
+    }
+  }
+}
