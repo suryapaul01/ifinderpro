@@ -191,38 +191,41 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show help information about how to use the bot"""
-    help_text = (
-        "📚 <b>ID Finder Pro Bot - Help Guide</b>\n\n"
-        "<b>Basic Commands:</b>\n"
-        "• /start - Start the bot and show the main menu\n"
-        "• /id - Get your own Telegram ID\n"
-        "• /help - Show this help message\n"
-        "• /username - Get ID by username (e.g., /username @telegram)\n"
-        "• /admin - Show groups and channels you admin\n"
-        "• /add - Add the bot to your groups or channels\n"
-        "• /donate - Support the developer\n\n"
-        
-        "<b>Group Commands:</b>\n"
-        "• /ids - Show the current group ID\n"
-        "• /mem - (Admin only) Get member info in groups\n\n"
-        
-        "<b>How to Get IDs:</b>\n"
-        "1️⃣ <b>Forward a message</b> from any user, bot, group or channel\n"
-        "2️⃣ <b>Forward a story</b> from any user or channel\n"
-        "3️⃣ Use the <b>buttons</b> to select and share a user, bot, group or channel\n"
-        "4️⃣ Use <b>/username</b> command followed by a username (e.g., /username @telegram)\n"
-        "5️⃣ Use <b>/admin</b> to see IDs of groups and channels you administer\n\n"
-        
-        "<b>Tips:</b>\n"
-        "• For private chats without username, forward a message from them\n"
-        "• For public entities, you can use the /username command\n"
-        "• Use the 'Donate' button to support the developer\n\n"
-        
-        "📣 Official Channel: @idfinderpro"
-    )
-    
-    await update.message.reply_text(help_text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
-    return SELECTING_ENTITY
+    chat_type = update.effective_chat.type
+
+    if chat_type == 'private':
+        # Private chat help
+        help_text = (
+            "📚 <b>ID Finder Pro Bot - Help Guide</b>\n\n"
+            "<b>Basic Commands:</b>\n"
+            "• /start - Start the bot and show the main menu\n"
+            "• /id - Get your own Telegram ID\n"
+            "• /help - Show this help message\n"
+            "• /username - Get ID by username (e.g., /username @telegram)\n"
+            "• /admin - Show groups and channels you admin\n"
+            "• /add - Add the bot to your groups or channels\n"
+            "• /donate - Support the developer\n\n"
+
+            "<b>How to Get IDs:</b>\n"
+            "1️⃣ <b>Forward a message</b> from any user, bot, group or channel\n"
+            "2️⃣ <b>Forward a story</b> from any user or channel\n"
+            "3️⃣ Use the <b>buttons</b> to select and share a user, bot, group or channel\n"
+            "4️⃣ Use <b>/username</b> command followed by a username (e.g., /username @telegram)\n"
+            "5️⃣ Use <b>/admin</b> to see IDs of groups and channels you administer\n\n"
+
+            "<b>Tips:</b>\n"
+            "• For private chats without username, forward a message from them\n"
+            "• For public entities, you can use the /username command\n"
+            "• Use the 'Donate' button to support the developer\n\n"
+
+            "📣 Official Channel: @idfinderpro"
+        )
+
+        await update.message.reply_text(help_text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
+        return SELECTING_ENTITY
+    else:
+        # Group chat help (delegate to group command)
+        await group_help_command(update, context)
 
 async def username_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /username command to get ID by username"""
@@ -328,20 +331,26 @@ async def handle_username_input(update: Update, context: ContextTypes.DEFAULT_TY
 
 async def get_user_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
-    
-    # Create a simple HTML-formatted response instead of Markdown
-    text = (
-        f"✅ <b>Entity:</b> User\n"
-        f"🔗 <b>Name:</b> {user.first_name}\n"
-        f"🆔 <b>ID:</b> <code>{user.id}</code>"
-    )
-    
-    if user.username:
-        text += f"\n📎 <b>Username:</b> @{user.username}"
-    
-    # Always keep the main keyboard visible
-    await update.message.reply_text(text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
-    return SELECTING_ENTITY
+    chat_type = update.effective_chat.type
+
+    # Different behavior for private chats vs groups
+    if chat_type == 'private':
+        # Private chat - use conversation handler format
+        text = (
+            f"✅ <b>Entity:</b> User\n"
+            f"🔗 <b>Name:</b> {user.first_name}\n"
+            f"🆔 <b>ID:</b> <code>{user.id}</code>"
+        )
+
+        if user.username:
+            text += f"\n📎 <b>Username:</b> @{user.username}"
+
+        # Always keep the main keyboard visible
+        await update.message.reply_text(text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
+        return SELECTING_ENTITY
+    else:
+        # Group chat - use group format (delegate to group command)
+        await group_id_command(update, context)
 
 async def handle_user_shared(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -1428,18 +1437,23 @@ def main():
     
     application = Application.builder().token(BOT_TOKEN).build()
     
-    # Define commands that will be shown in the bot's menu
-    commands = [
+    # Define separate command sets for private chats and groups
+    private_commands = [
         BotCommand("start", "Start the bot"),
         BotCommand("id", "Get your own ID"),
-        BotCommand("ids", "Get group ID (groups only)"),
         BotCommand("username", "Get ID by username"),
-        BotCommand("whois", "Get user info (groups only)"),
-        BotCommand("mentionid", "Create clickable mention (groups only)"),
         BotCommand("admin", "Show groups/channels you admin"),
         BotCommand("add", "Add bot to your groups"),
         BotCommand("help", "Show help information"),
-        BotCommand("donate", "Support the developer"),
+        BotCommand("donate", "Support the developer")
+    ]
+
+    group_commands = [
+        BotCommand("id", "Get your own ID"),
+        BotCommand("ids", "Get group ID"),
+        BotCommand("whois", "Get user info"),
+        BotCommand("mentionid", "Create clickable mention"),
+        BotCommand("help", "Show help information"),
         BotCommand("warn", "Warn a user (admin only)"),
         BotCommand("warnings", "Check user warnings (admin only)"),
         BotCommand("resetwarn", "Reset user warnings (admin only)"),
@@ -1541,11 +1555,9 @@ def main():
 
     # Add group command handlers
     # User commands (available to everyone in groups)
-    application.add_handler(CommandHandler('id', group_id_command, filters=filters.ChatType.GROUPS))
     application.add_handler(CommandHandler('ids', group_ids_command, filters=filters.ChatType.GROUPS))
     application.add_handler(CommandHandler('whois', whois_command, filters=filters.ChatType.GROUPS))
     application.add_handler(CommandHandler('mentionid', mentionid_command, filters=filters.ChatType.GROUPS))
-    application.add_handler(CommandHandler('help', group_help_command, filters=filters.ChatType.GROUPS))
 
     # Admin commands (only for group admins)
     application.add_handler(CommandHandler('warn', warn_command, filters=filters.ChatType.GROUPS))
@@ -1566,9 +1578,20 @@ def main():
     
     # Set commands using the post_init method
     async def post_init(app: Application) -> None:
-        await app.bot.set_my_commands(commands)
-        print("Bot commands have been set!")
-    
+        # Set commands for private chats
+        await app.bot.set_my_commands(
+            private_commands,
+            scope={'type': 'all_private_chats'}
+        )
+
+        # Set commands for groups
+        await app.bot.set_my_commands(
+            group_commands,
+            scope={'type': 'all_group_chats'}
+        )
+
+        print("Bot commands have been set for private chats and groups!")
+
     # Set the post_init function
     application.post_init = post_init
     

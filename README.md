@@ -1,6 +1,6 @@
 # Telegram ID Finder Bot
 
-we are now making A Telegram bot that helps users find Telegram IDs for users, channels, groups, and bots.
+A Telegram bot that helps users find Telegram IDs for users, channels, groups, and bots.
 
 ## Features
 
