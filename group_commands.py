@@ -258,6 +258,97 @@ async def group_help_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     
     await update.message.reply_text(help_text, parse_mode='HTML')
 
+async def help_group_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show group-specific help information for regular users"""
+    chat_type = update.effective_chat.type
+
+    help_text = (
+        "📚 <b>Group Commands Help</b>\n\n"
+        "<b>👤 User Commands (Everyone):</b>\n"
+        "• /id - Get your Telegram ID\n"
+        "• /ids - Get this group's ID\n"
+        "• /find [user_id] - Find user info by ID\n"
+        "• /whois @user - Get user info (or reply to message)\n"
+        "• /mentionid @user - Create clickable mention\n"
+        "• /info - Show bot information\n"
+        "• /help_group - Show this help\n"
+        "• /help_admin - Show admin commands (admins only)\n\n"
+
+        "<b>💡 Tips:</b>\n"
+        "• All user commands support both @username and reply-to-message\n"
+        "• Use /help_admin to see moderation commands if you're an admin\n"
+        "• The /find command helps you get info about users by their ID\n"
+        "• These commands work in both groups and private chats\n\n"
+
+        "🤖 <b>Bot:</b> @IDFinderProBot"
+    )
+
+    # Handle different chat types
+    if chat_type == 'private':
+        # Import here to avoid circular import
+        from bot import MAIN_KEYBOARD, SELECTING_ENTITY
+        await update.message.reply_text(help_text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
+        return SELECTING_ENTITY
+    else:
+        await update.message.reply_text(help_text, parse_mode='HTML')
+
+async def help_admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show admin-specific help information"""
+    chat_type = update.effective_chat.type
+    user_id = update.effective_user.id
+    chat_id = update.effective_chat.id
+
+    # Check if user is admin (only in groups)
+    if chat_type in ['group', 'supergroup']:
+        is_admin = await group_handler.is_user_admin(context, chat_id, user_id)
+        if not is_admin:
+            await update.message.reply_text(
+                "❌ This command is only available to group administrators.",
+                parse_mode='HTML'
+            )
+            return
+
+    help_text = (
+        "🛡️ <b>Admin Commands Help</b>\n\n"
+        "<b>⚠️ Warning System:</b>\n"
+        "• /warn @user [reason] - Issue warning to user\n"
+        "• /warnings @user - Check user's warning history\n"
+        "• /resetwarn @user - Clear all user warnings\n\n"
+
+        "<b>🔇 Mute System:</b>\n"
+        "• /mute @user [time] - Mute user temporarily\n"
+        "• /unmute @user - Remove mute from user\n"
+        "• Time format: 10m, 2h, 1d (default: 1h)\n\n"
+
+        "<b>👢 Kick/Ban System:</b>\n"
+        "• /kick @user - Remove user (can rejoin)\n"
+        "• /ban @user - Ban user permanently\n"
+        "• /unban @user - Remove ban from user\n\n"
+
+        "<b>📌 Group Management:</b>\n"
+        "• /pin - Pin the replied message\n"
+        "• /groupinfo - Show detailed group statistics\n"
+        "• /listadmins - List all group administrators\n\n"
+
+        "<b>💡 Admin Tips:</b>\n"
+        "• All commands work with @username or reply-to-message\n"
+        "• Cannot moderate other administrators\n"
+        "• Mutes automatically expire after set duration\n"
+        "• Warning system tracks up to 3 warnings per user\n"
+        "• These commands only work in groups where you're an admin\n\n"
+
+        "🤖 <b>Bot:</b> @IDFinderProBot"
+    )
+
+    # Handle different chat types
+    if chat_type == 'private':
+        # Import here to avoid circular import
+        from bot import MAIN_KEYBOARD, SELECTING_ENTITY
+        await update.message.reply_text(help_text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
+        return SELECTING_ENTITY
+    else:
+        await update.message.reply_text(help_text, parse_mode='HTML')
+
 # Admin Commands (Only Usable by Group Admins)
 
 async def warn_command(update: Update, context: ContextTypes.DEFAULT_TYPE):

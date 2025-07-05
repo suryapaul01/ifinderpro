@@ -10,7 +10,7 @@ from datetime import datetime
 # Import group commands
 from group_commands import (
     group_id_command, group_ids_command, whois_command, mentionid_command,
-    group_help_command, warn_command, warnings_command, resetwarn_command,
+    group_help_command, help_group_command, help_admin_command, warn_command, warnings_command, resetwarn_command,
     mute_command, unmute_command, kick_command, ban_command, unban_command,
     pin_command, groupinfo_command, listadmins_command
 )
@@ -197,28 +197,40 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Private chat help
         help_text = (
             "📚 <b>ID Finder Pro Bot - Help Guide</b>\n\n"
-            "<b>Basic Commands:</b>\n"
+            "<b>🔍 Basic Commands:</b>\n"
             "• /start - Start the bot and show the main menu\n"
             "• /id - Get your own Telegram ID\n"
-            "• /help - Show this help message\n"
+            "• /find [user_id] - Find user info by their Telegram ID\n"
             "• /username - Get ID by username (e.g., /username @telegram)\n"
             "• /admin - Show groups and channels you admin\n"
             "• /add - Add the bot to your groups or channels\n"
+            "• /help - Show this help message\n"
             "• /donate - Support the developer\n\n"
 
-            "<b>How to Get IDs:</b>\n"
+            "<b>📋 How to Get IDs:</b>\n"
             "1️⃣ <b>Forward a message</b> from any user, bot, group or channel\n"
             "2️⃣ <b>Forward a story</b> from any user or channel\n"
             "3️⃣ Use the <b>buttons</b> to select and share a user, bot, group or channel\n"
             "4️⃣ Use <b>/username</b> command followed by a username (e.g., /username @telegram)\n"
-            "5️⃣ Use <b>/admin</b> to see IDs of groups and channels you administer\n\n"
+            "5️⃣ Use <b>/find</b> command with a user ID (e.g., /find 123456789)\n"
+            "6️⃣ Use <b>/admin</b> to see IDs of groups and channels you administer\n\n"
 
-            "<b>Tips:</b>\n"
+            "<b>💡 Pro Tips:</b>\n"
             "• For private chats without username, forward a message from them\n"
             "• For public entities, you can use the /username command\n"
+            "• Use /find to get detailed info about any user by their ID\n"
+            "• Add the bot to groups for advanced group management features\n"
             "• Use the 'Donate' button to support the developer\n\n"
 
-            "📣 Official Channel: @idfinderpro"
+            "<b>🛡️ Group Features:</b>\n"
+            "When added to groups, this bot provides:\n"
+            "• User identification and info commands\n"
+            "• Advanced moderation tools for admins\n"
+            "• Warning and mute systems\n"
+            "• Group statistics and management\n\n"
+
+            "📣 <b>Official Channel:</b> @idfinderpro\n"
+            "🤖 <b>Bot Username:</b> @IDFinderProBot"
         )
 
         await update.message.reply_text(help_text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
@@ -226,6 +238,92 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         # Group chat help (delegate to group command)
         await group_help_command(update, context)
+
+async def find_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle the /find command to get user info by Telegram ID"""
+    chat_type = update.effective_chat.type
+
+    if not context.args or len(context.args) == 0:
+        help_text = (
+            "🔍 <b>Find User by ID</b>\n\n"
+            "Usage: <code>/find [user_id]</code>\n\n"
+            "Example: <code>/find 123456789</code>\n\n"
+            "This command will try to find information about a user using their Telegram ID."
+        )
+
+        if chat_type == 'private':
+            await update.message.reply_text(help_text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
+            return SELECTING_ENTITY
+        else:
+            await update.message.reply_text(help_text, parse_mode='HTML')
+
+    try:
+        user_id = int(context.args[0])
+    except ValueError:
+        error_text = "❌ Invalid user ID. Please provide a valid numeric Telegram ID."
+
+        if chat_type == 'private':
+            await update.message.reply_text(error_text, reply_markup=MAIN_KEYBOARD)
+            return SELECTING_ENTITY
+        else:
+            await update.message.reply_text(error_text)
+
+    try:
+        # Try to get user info using get_chat
+        user_info = await context.bot.get_chat(user_id)
+
+        # Format the response
+        response_text = f"✅ <b>User Found</b>\n\n"
+        response_text += f"🆔 <b>ID:</b> <code>{user_info.id}</code>\n"
+        response_text += f"👤 <b>Name:</b> {user_info.first_name}"
+
+        if user_info.last_name:
+            response_text += f" {user_info.last_name}"
+
+        if user_info.username:
+            response_text += f"\n📎 <b>Username:</b> @{user_info.username}"
+
+        # Determine entity type
+        if user_info.type == 'private':
+            if user_info.is_premium:
+                response_text += f"\n🏷️ <b>Type:</b> 👤 User (Premium)"
+            else:
+                response_text += f"\n🏷️ <b>Type:</b> 👤 User"
+        elif user_info.type == 'bot':
+            response_text += f"\n🏷️ <b>Type:</b> 🤖 Bot"
+        elif user_info.type == 'group':
+            response_text += f"\n🏷️ <b>Type:</b> 👥 Group"
+        elif user_info.type == 'supergroup':
+            response_text += f"\n🏷️ <b>Type:</b> 👥 Supergroup"
+        elif user_info.type == 'channel':
+            response_text += f"\n🏷️ <b>Type:</b> 📢 Channel"
+
+        if user_info.bio:
+            response_text += f"\n📝 <b>Bio:</b> {user_info.bio[:100]}{'...' if len(user_info.bio) > 100 else ''}"
+
+        if chat_type == 'private':
+            await update.message.reply_text(response_text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
+            return SELECTING_ENTITY
+        else:
+            await update.message.reply_text(response_text, parse_mode='HTML')
+
+    except Exception as e:
+        error_text = (
+            f"❌ <b>User Not Found</b>\n\n"
+            f"Could not find user with ID: <code>{user_id}</code>\n\n"
+            f"<b>Possible reasons:</b>\n"
+            f"• User has never interacted with this bot\n"
+            f"• User has blocked the bot\n"
+            f"• Invalid user ID\n"
+            f"• User account deleted\n\n"
+            f"<b>Note:</b> The bot can only find users who have previously interacted with it or are in mutual groups."
+        )
+
+        if chat_type == 'private':
+            await update.message.reply_text(error_text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
+            return SELECTING_ENTITY
+        else:
+            await update.message.reply_text(error_text, parse_mode='HTML')
 
 async def username_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /username command to get ID by username"""
@@ -786,6 +884,133 @@ async def donate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     return SELECTING_DONATION_METHOD
 
+async def info_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show comprehensive bot information and statistics"""
+    chat_type = update.effective_chat.type
+
+    # Get user count from database
+    total_users = user_db.get_user_count()
+
+    # Get bot info
+    bot_info = await context.bot.get_me()
+
+    info_text = (
+        f"🤖 <b>{bot_info.first_name} - Bot Information</b>\n\n"
+        f"📊 <b>Statistics:</b>\n"
+        f"• Total Users: {total_users:,}\n"
+        f"• Bot Username: @{bot_info.username}\n"
+        f"• Bot ID: <code>{bot_info.id}</code>\n\n"
+
+        f"🔧 <b>Features:</b>\n"
+        f"• User, Bot, Group & Channel ID lookup\n"
+        f"• Username to ID resolution\n"
+        f"• Forwarded message analysis\n"
+        f"• Story forwarding support\n"
+        f"• Group management tools\n"
+        f"• Admin moderation system\n"
+        f"• Warning & mute systems\n"
+        f"• User database tracking\n\n"
+
+        f"⚡ <b>Supported Methods:</b>\n"
+        f"• Forward messages/stories\n"
+        f"• Share contacts via buttons\n"
+        f"• Username lookup (/username)\n"
+        f"• User ID search (/find)\n"
+        f"• Admin panel (/admin)\n\n"
+
+        f"🛡️ <b>Group Commands:</b>\n"
+        f"• User info & identification\n"
+        f"• Moderation tools for admins\n"
+        f"• Warning system with tracking\n"
+        f"• Temporary mute functionality\n"
+        f"• Kick/ban management\n"
+        f"• Group statistics\n\n"
+
+        f"💝 <b>Support:</b>\n"
+        f"• Developer: Contact via /donate\n"
+        f"• Channel: @idfinderpro\n"
+        f"• Version: 2.0 Pro\n"
+        f"• Last Update: December 2024"
+    )
+
+    if chat_type == 'private':
+        await update.message.reply_text(info_text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
+        return SELECTING_ENTITY
+    else:
+        await update.message.reply_text(info_text, parse_mode='HTML')
+
+async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show detailed bot statistics (admin only)"""
+    user_id = update.effective_user.id
+    chat_type = update.effective_chat.type
+
+    # Check if user is admin
+    if user_id not in ADMIN_IDS:
+        error_text = "❌ This command is only available to bot administrators."
+
+        if chat_type == 'private':
+            await update.message.reply_text(error_text, reply_markup=MAIN_KEYBOARD)
+            return SELECTING_ENTITY
+        else:
+            await update.message.reply_text(error_text)
+            return
+
+    # Get detailed statistics
+    total_users = user_db.get_user_count()
+    recent_users = user_db.get_recent_users(7)  # Last 7 days
+
+    # Get bot info
+    bot_info = await context.bot.get_me()
+
+    # Calculate uptime (approximate)
+    from datetime import datetime
+    current_time = datetime.now()
+
+    stats_text = (
+        f"📊 <b>Bot Statistics - Admin Panel</b>\n\n"
+        f"🤖 <b>Bot Info:</b>\n"
+        f"• Name: {bot_info.first_name}\n"
+        f"• Username: @{bot_info.username}\n"
+        f"• ID: <code>{bot_info.id}</code>\n"
+        f"• Can Join Groups: {'✅' if bot_info.can_join_groups else '❌'}\n"
+        f"• Can Read Messages: {'✅' if bot_info.can_read_all_group_messages else '❌'}\n\n"
+
+        f"👥 <b>User Statistics:</b>\n"
+        f"• Total Users: {total_users:,}\n"
+        f"• New Users (7 days): {len(recent_users):,}\n"
+        f"• Growth Rate: {(len(recent_users)/max(total_users-len(recent_users), 1)*100):.1f}%\n\n"
+
+        f"⚡ <b>System Info:</b>\n"
+        f"• Report Time: {current_time.strftime('%Y-%m-%d %H:%M:%S')}\n"
+        f"• Database Status: ✅ Active\n"
+        f"• Bot Status: ✅ Running\n\n"
+
+        f"🔧 <b>Features Active:</b>\n"
+        f"• ID Lookup: ✅\n"
+        f"• Username Resolution: ✅\n"
+        f"• Group Management: ✅\n"
+        f"• Admin Notifications: ✅\n"
+        f"• User Database: ✅\n"
+        f"• Payment System: ✅\n\n"
+
+        f"📈 <b>Usage Metrics:</b>\n"
+        f"• Commands Available: 20+\n"
+        f"• Group Commands: 15+\n"
+        f"• Admin Commands: 10+\n"
+        f"• Supported Chat Types: All\n\n"
+
+        f"🛡️ <b>Admin Panel:</b>\n"
+        f"• Total Admins: {len(ADMIN_IDS)}\n"
+        f"• Your ID: <code>{user_id}</code>\n"
+        f"• Access Level: Full Admin"
+    )
+
+    if chat_type == 'private':
+        await update.message.reply_text(stats_text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
+        return SELECTING_ENTITY
+    else:
+        await update.message.reply_text(stats_text, parse_mode='HTML')
+
 async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show groups and channels where the user is an admin"""
     await update.message.reply_text(
@@ -1292,6 +1517,7 @@ async def add_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "1. Click the 'Add Bot to Group' button\n"
         "2. Select the group from your list\n"
         "3. The bot will be automatically added!\n\n"
+        "📚 <b>After adding:</b> Use /help_group in your group for user commands help.\n\n"
         "No need to send the group back to the bot - it's that simple! 🎉",
         parse_mode='HTML',
         reply_markup=ADD_KEYBOARD
@@ -1441,30 +1667,27 @@ def main():
     private_commands = [
         BotCommand("start", "Start the bot"),
         BotCommand("id", "Get your own ID"),
+        BotCommand("find", "Find user info by ID"),
         BotCommand("username", "Get ID by username"),
         BotCommand("admin", "Show groups/channels you admin"),
         BotCommand("add", "Add bot to your groups"),
+        BotCommand("info", "Show bot information"),
+        BotCommand("stats", "Show bot statistics (admin only)"),
         BotCommand("help", "Show help information"),
+        BotCommand("help_group", "Show group commands help"),
+        BotCommand("help_admin", "Show admin commands help"),
         BotCommand("donate", "Support the developer")
     ]
 
     group_commands = [
         BotCommand("id", "Get your own ID"),
         BotCommand("ids", "Get group ID"),
+        BotCommand("find", "Find user info by ID"),
         BotCommand("whois", "Get user info"),
         BotCommand("mentionid", "Create clickable mention"),
-        BotCommand("help", "Show help information"),
-        BotCommand("warn", "Warn a user (admin only)"),
-        BotCommand("warnings", "Check user warnings (admin only)"),
-        BotCommand("resetwarn", "Reset user warnings (admin only)"),
-        BotCommand("mute", "Mute a user (admin only)"),
-        BotCommand("unmute", "Unmute a user (admin only)"),
-        BotCommand("kick", "Kick a user (admin only)"),
-        BotCommand("ban", "Ban a user (admin only)"),
-        BotCommand("unban", "Unban a user (admin only)"),
-        BotCommand("pin", "Pin a message (admin only)"),
-        BotCommand("groupinfo", "Show group stats (admin only)"),
-        BotCommand("listadmins", "List group admins (admin only)")
+        BotCommand("info", "Show bot information"),
+        BotCommand("help_group", "Show group help"),
+        BotCommand("help_admin", "Show admin help")
     ]
     
     # Create conversation handler with per_message=False to avoid warnings
@@ -1473,6 +1696,9 @@ def main():
             CommandHandler('start', start),
             CommandHandler('help', help_command),
             CommandHandler('id', get_user_id),
+            CommandHandler('find', find_command),
+            CommandHandler('info', info_command),
+            CommandHandler('stats', stats_command),
             CommandHandler('admin', admin_command),
             CommandHandler('username', username_command),
             CommandHandler('donate', donate_command),
@@ -1480,6 +1706,8 @@ def main():
             CommandHandler('mem', mem_command),
             CommandHandler('ids', ids_command),
             CommandHandler('notify', notify_command),
+            CommandHandler('help_group', help_group_command),
+            CommandHandler('help_admin', help_admin_command),
         ],
         states={
             SELECTING_ENTITY: [
@@ -1534,6 +1762,9 @@ def main():
             CommandHandler('start', start),
             CommandHandler('help', help_command),
             CommandHandler('id', get_user_id),
+            CommandHandler('find', find_command),
+            CommandHandler('info', info_command),
+            CommandHandler('stats', stats_command),
             CommandHandler('admin', admin_command),
             CommandHandler('username', username_command),
             CommandHandler('donate', donate_command),
@@ -1541,6 +1772,8 @@ def main():
             CommandHandler('mem', mem_command),
             CommandHandler('ids', ids_command),
             CommandHandler('notify', notify_command),
+            CommandHandler('help_group', help_group_command),
+            CommandHandler('help_admin', help_admin_command),
         ],
         per_message=False,
     )
@@ -1555,9 +1788,13 @@ def main():
 
     # Add group command handlers
     # User commands (available to everyone in groups)
+    application.add_handler(CommandHandler('find', find_command, filters=filters.ChatType.GROUPS))
+    application.add_handler(CommandHandler('info', info_command, filters=filters.ChatType.GROUPS))
     application.add_handler(CommandHandler('ids', group_ids_command, filters=filters.ChatType.GROUPS))
     application.add_handler(CommandHandler('whois', whois_command, filters=filters.ChatType.GROUPS))
     application.add_handler(CommandHandler('mentionid', mentionid_command, filters=filters.ChatType.GROUPS))
+    application.add_handler(CommandHandler('help_group', help_group_command, filters=filters.ChatType.GROUPS))
+    application.add_handler(CommandHandler('help_admin', help_admin_command, filters=filters.ChatType.GROUPS))
 
     # Admin commands (only for group admins)
     application.add_handler(CommandHandler('warn', warn_command, filters=filters.ChatType.GROUPS))

@@ -5,8 +5,8 @@
     "first_name": "Surya",
     "last_name": "paul",
     "joined_date": "2025-07-04T23:06:37.535400",
-    "last_seen": "2025-07-05T10:29:24.526012",
-    "interaction_count": 11
+    "last_seen": "2025-07-05T15:56:05.323291",
+    "interaction_count": 16
   },
   "1087968824": {
     "user_id": 1087968824,
@@ -51,6 +51,24 @@
     "last_name": null,
     "joined_date": "2025-07-05T08:20:03.094152",
     "last_seen": "2025-07-05T08:20:03.094152",
+    "interaction_count": 1
+  },
+  "1099778874": {
+    "user_id": 1099778874,
+    "username": "aveic3",
+    "first_name": "blesssna",
+    "last_name": null,
+    "joined_date": "2025-07-05T14:52:26.846450",
+    "last_seen": "2025-07-05T14:52:26.846450",
+    "interaction_count": 1
+  },
+  "5083000150": {
+    "user_id": 5083000150,
+    "username": null,
+    "first_name": "Андрей",
+    "last_name": null,
+    "joined_date": "2025-07-05T15:49:46.742837",
+    "last_seen": "2025-07-05T15:49:46.742837",
     "interaction_count": 1
   }
 }
