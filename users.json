@@ -5,8 +5,8 @@
     "first_name": "Surya",
     "last_name": "paul",
     "joined_date": "2025-07-04T23:06:37.535400",
-    "last_seen": "2025-07-05T00:01:59.631760",
-    "interaction_count": 4
+    "last_seen": "2025-07-05T08:32:05.970619",
+    "interaction_count": 9
   },
   "1087968824": {
     "user_id": 1087968824,
@@ -15,6 +15,42 @@
     "last_name": null,
     "joined_date": "2025-07-05T01:14:11.695849",
     "last_seen": "2025-07-05T01:14:11.695849",
+    "interaction_count": 1
+  },
+  "6023786801": {
+    "user_id": 6023786801,
+    "username": "rajkpal2",
+    "first_name": "Raj",
+    "last_name": "Pal 🦒🐾 🐍",
+    "joined_date": "2025-07-04T22:02:10.009454",
+    "last_seen": "2025-07-04T22:02:10.009454",
+    "interaction_count": 1
+  },
+  "7735412154": {
+    "user_id": 7735412154,
+    "username": null,
+    "first_name": "шахриёр",
+    "last_name": null,
+    "joined_date": "2025-07-04T22:39:09.440693",
+    "last_seen": "2025-07-04T22:39:09.440693",
+    "interaction_count": 1
+  },
+  "7625551332": {
+    "user_id": 7625551332,
+    "username": "pulatova_madina",
+    "first_name": "Pulatova Madina",
+    "last_name": null,
+    "joined_date": "2025-07-05T08:19:39.168653",
+    "last_seen": "2025-07-05T08:19:39.168653",
+    "interaction_count": 1
+  },
+  "1233431241": {
+    "user_id": 1233431241,
+    "username": null,
+    "first_name": "Go'zal",
+    "last_name": null,
+    "joined_date": "2025-07-05T08:20:03.094152",
+    "last_seen": "2025-07-05T08:20:03.094152",
     "interaction_count": 1
   }
 }
