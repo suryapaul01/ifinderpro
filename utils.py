@@ -60,24 +60,32 @@ async def extract_entity_info(message: Message):
                         'verified': verified
                     }
             
-            # Handle story origin
-            elif origin_type == 'story':
+            # Handle story origin - check multiple possible origin types
+            elif origin_type in ['story', 'user_story', 'channel_story']:
+                logger.info(f"Processing story with origin type: {origin_type}")
+
+                # Try to get story information from different possible attributes
+                story_id = getattr(message.forward_origin, 'story_id', None)
+                logger.info(f"Story ID: {story_id}")
+
                 if hasattr(message.forward_origin, 'sender_user'):
                     # Story from a user
                     user_origin = message.forward_origin.sender_user
                     entity_type = 'User Story'
                     name = f"{user_origin.first_name or ''} {user_origin.last_name or ''}".strip()
                     username = user_origin.username
-                    verified = None
+                    verified = getattr(user_origin, 'is_verified', None)
                     entity_id = user_origin.id
-                    
+
+                    logger.info(f"User story detected: ID={entity_id}, Name={name}, Username={username}")
+
                     return {
                         'type': entity_type,
                         'id': entity_id,
                         'username': username,
                         'name': name,
                         'verified': verified,
-                        'story_id': getattr(message.forward_origin, 'story_id', None)
+                        'story_id': story_id
                     }
                 elif hasattr(message.forward_origin, 'sender_chat'):
                     # Story from a channel
@@ -87,15 +95,39 @@ async def extract_entity_info(message: Message):
                     username = chat_origin.username
                     verified = getattr(chat_origin, 'is_verified', None)
                     entity_id = chat_origin.id
-                    
+
+                    logger.info(f"Channel story detected: ID={entity_id}, Name={name}, Username={username}")
+
                     return {
                         'type': entity_type,
                         'id': entity_id,
                         'username': username,
                         'name': name,
                         'verified': verified,
-                        'story_id': getattr(message.forward_origin, 'story_id', None)
+                        'story_id': story_id
                     }
+                elif hasattr(message.forward_origin, 'chat'):
+                    # Alternative attribute name for chat
+                    chat_origin = message.forward_origin.chat
+                    entity_type = 'Channel Story'
+                    name = chat_origin.title
+                    username = chat_origin.username
+                    verified = getattr(chat_origin, 'is_verified', None)
+                    entity_id = chat_origin.id
+
+                    logger.info(f"Channel story (alt) detected: ID={entity_id}, Name={name}, Username={username}")
+
+                    return {
+                        'type': entity_type,
+                        'id': entity_id,
+                        'username': username,
+                        'name': name,
+                        'verified': verified,
+                        'story_id': story_id
+                    }
+                else:
+                    logger.warning(f"Story origin found but no sender information available. Attributes: {dir(message.forward_origin)}")
+                    return None
                     
             elif origin_type == 'hidden_user':
                 # Handle hidden user origin
