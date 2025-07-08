@@ -273,7 +273,7 @@ async def handle_help_callback(update: Update, context: ContextTypes.DEFAULT_TYP
                 "• /add - Add bot to your groups\n"
                 "• /donate - Support the developer\n"
                 "• /help - Show this help system\n\n"
-                "Please Note that some of our feature might not work, it is because telegram changes their API time to time. I'll Update you all in my channel @idfinderpro."
+                "<blockquote><b>Please Note: that some of our feature might not work, it is because telegram changes their API time to time. I'll Update you all in my channel @idfinderpro.</b></blockquote>"
             )
 
         elif data == "help_group":
@@ -295,7 +295,7 @@ async def handle_help_callback(update: Update, context: ContextTypes.DEFAULT_TYP
                 "• /pin [reply to message] - Pin a message\n"
                 "• /groupinfo - Show detailed group info\n"
                 "• /listadmins - List all group admins\n\n"
-                "Please Note that some of our feature might not work, it is because telegram changes their API time to time. I'll Update you all in my channel @idfinderpro."
+                "<blockquote><b>Please Note: that some of our feature might not work, it is because telegram changes their API time to time. I'll Update you all in my channel @idfinderpro.</b></blockquote>"
             )
 
         elif data == "help_features":
@@ -316,7 +316,7 @@ async def handle_help_callback(update: Update, context: ContextTypes.DEFAULT_TYP
                 "• User database tracking\n"
                 "• CSV data export (admin)\n"
                 "• Analytics dashboard (admin)\n\n"
-                "Please Note that some of our feature might not work, it is because telegram changes their API time to time. I'll Update you all in my channel @idfinderpro."
+                "<blockquote><b>Please Note: that some of our feature might not work, it is because telegram changes their API time to time. I'll Update you all in my channel @idfinderpro.</b></blockquote>"
             )
 
         elif data == "help_usage":
@@ -341,7 +341,7 @@ async def handle_help_callback(update: Update, context: ContextTypes.DEFAULT_TYP
                 "• Private chats: Forward messages\n"
                 "• Public entities: Use /username\n"
                 "• Groups: Add bot as admin\n\n"
-                "Please Note that some of our feature might not work, it is because telegram changes their API time to time. I'll Update you all in my channel @idfinderpro."
+                "<blockquote><b>Please Note: that some of our feature might not work, it is because telegram changes their API time to time. I'll Update you all in my channel @idfinderpro.</b></blockquote>"
             )
 
         elif data == "help_donations":
@@ -415,7 +415,7 @@ async def handle_help_callback(update: Update, context: ContextTypes.DEFAULT_TYP
                 "• Use keyboard buttons\n"
                 "• Commands with parameters\n"
                 "• Inline mode support\n\n"
-                "Please Note that some of our feature might not work, it is because telegram changes their API time to time. I'll Update you all in my channel @idfinderpro."
+                "<blockquote><b>Please Note: that some of our feature might not work, it is because telegram changes their API time to time. I'll Update you all in my channel @idfinderpro.</b></blockquote>"
             )
 
         elif data == "help_back" or data == "help_menu":
