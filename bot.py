@@ -184,14 +184,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"• <b>Forward stories</b> to get user/channel ID\n"
         f"• Use <b>buttons below</b> to share contacts\n"
         f"• Type <b>/id</b> to get your own ID\n"
-        f"• Type <b>/help</b> for interactive help system\n\n"
-
-        f"⚡ <b>Key Features:</b>\n"
-        f"• 👤 User lookup by ID or username\n"
-        f"• 👥 Group management & moderation tools\n"
-        f"• 📊 Admin analytics dashboard\n"
-        f"• 🔄 Inline mode support (@IDFinderPro_Bot)\n"
-        f"• 💰 Support developer with donations\n\n"
+        f"• Type <b>/help</b> for help system\n\n"
 
         f"🛡️ <b>Group Features:</b>\n"
         f"Add me to your groups for:\n"
@@ -200,14 +193,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"• Admin management tools\n"
         f"• Group statistics tracking\n\n"
 
-        f"💡 <b>Pro Tips:</b>\n"
-        f"• Use /username @handle for public entities\n"
-        f"• Forward messages for private chats\n"
-        f"• Add bot as admin in groups for full features\n"
-        f"• Check /help for detailed command guide\n\n"
-
-        f"📣 <b>Official Channel:</b> @idfinderpro\n"
-        f"🤖 <b>Bot Username:</b> @IDFinderPro_Bot\n\n"
+        f"📣 <b>Official Channel:</b> @idfinderpro <b>subscribe For Updates</b>\n"
 
         f"<i>Select an option below to get started!</i>"
     )
@@ -285,9 +271,9 @@ async def handle_help_callback(update: Update, context: ContextTypes.DEFAULT_TYP
                 "• /username [@username] - Get ID by username\n"
                 "• /admin - Show groups/channels you admin\n"
                 "• /add - Add bot to your groups\n"
-                "• /info - Show bot information\n"
                 "• /donate - Support the developer\n"
-                "• /help - Show this help system"
+                "• /help - Show this help system\n\n"
+                "Please Note that some of our feature might not work, it is because telegram changes their API time to time. I'll Update you all in my channel @idfinderpro."
             )
 
         elif data == "help_group":
@@ -308,7 +294,8 @@ async def handle_help_callback(update: Update, context: ContextTypes.DEFAULT_TYP
                 "• /ban [@user or reply] - Ban a user\n"
                 "• /pin [reply to message] - Pin a message\n"
                 "• /groupinfo - Show detailed group info\n"
-                "• /listadmins - List all group admins"
+                "• /listadmins - List all group admins\n\n"
+                "Please Note that some of our feature might not work, it is because telegram changes their API time to time. I'll Update you all in my channel @idfinderpro."
             )
 
         elif data == "help_features":
@@ -328,7 +315,8 @@ async def handle_help_callback(update: Update, context: ContextTypes.DEFAULT_TYP
                 "• Admin notification system\n"
                 "• User database tracking\n"
                 "• CSV data export (admin)\n"
-                "• Analytics dashboard (admin)"
+                "• Analytics dashboard (admin)\n\n"
+                "Please Note that some of our feature might not work, it is because telegram changes their API time to time. I'll Update you all in my channel @idfinderpro."
             )
 
         elif data == "help_usage":
@@ -352,13 +340,14 @@ async def handle_help_callback(update: Update, context: ContextTypes.DEFAULT_TYP
                 "<b>Pro Tips:</b>\n"
                 "• Private chats: Forward messages\n"
                 "• Public entities: Use /username\n"
-                "• Groups: Add bot as admin"
+                "• Groups: Add bot as admin\n\n"
+                "Please Note that some of our feature might not work, it is because telegram changes their API time to time. I'll Update you all in my channel @idfinderpro."
             )
 
         elif data == "help_donations":
             text = (
                 "💰 <b>Donations & Support</b>\n\n"
-                "Support the development of ID Finder Pro Bot!\n\n"
+                "Support the developer of ID Finder Pro Bot!\n\n"
                 "<b>How to Donate:</b>\n"
                 "• Use the 'Donate' button in main menu\n"
                 "• Send /donate command\n"
@@ -368,7 +357,7 @@ async def handle_help_callback(update: Update, context: ContextTypes.DEFAULT_TYP
                 "• Keep the bot running 24/7\n"
                 "• Add new amazing features\n"
                 "• Provide faster service\n"
-                "• Support development team\n\n"
+                "• Support developer @tataa_sumo\n\n"
 
                 "<b>Payment Methods:</b>\n"
                 "• Telegram Stars (⭐)\n"
@@ -425,7 +414,8 @@ async def handle_help_callback(update: Update, context: ContextTypes.DEFAULT_TYP
                 "• Forward messages/stories\n"
                 "• Use keyboard buttons\n"
                 "• Commands with parameters\n"
-                "• Inline mode support"
+                "• Inline mode support\n\n"
+                "Please Note that some of our feature might not work, it is because telegram changes their API time to time. I'll Update you all in my channel @idfinderpro."
             )
 
         elif data == "help_back" or data == "help_menu":
@@ -495,23 +485,12 @@ async def admin_com_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• <code>/groups</code> - View group statistics and data\n\n"
 
         "<b>📢 Communication:</b>\n"
-        "• <code>/broadcast [message]</code> - Send message to all users\n"
-        "• <code>/notify [message]</code> - Send notification to admins\n\n"
-
-        "<b>🔧 Management:</b>\n"
-        "• <code>/admin</code> - Admin panel for group management\n"
-        "• <code>/mem [username/id]</code> - Check user membership in groups\n\n"
+        "• <code>/notify</code> - Send notification to users\n\n"
 
         "<b>📄 Data Export:</b>\n"
         "• Use <code>/stats</code> → Export buttons for CSV downloads\n"
         "• Users CSV - Complete user database\n"
         "• Groups CSV - Complete groups database\n\n"
-
-        "<b>💡 Usage Examples:</b>\n"
-        "• <code>/broadcast Hello everyone! New features added.</code>\n"
-        "• <code>/notify Server maintenance at 2 AM</code>\n"
-        "• <code>/users</code> - View user analytics\n"
-        "• <code>/groups</code> - View group analytics\n\n"
 
         "<b>🔐 Admin Access:</b>\n"
         f"• Total Admins: {len(ADMIN_IDS)}\n"
