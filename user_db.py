@@ -82,5 +82,9 @@ class UserDatabase:
         """Get all user IDs for broadcasting"""
         return [int(user_id) for user_id in self.users.keys()]
 
+    def get_all_users(self) -> dict:
+        """Get all users data for export"""
+        return self.users.copy()
+
 # Global instance
 user_db = UserDatabase()

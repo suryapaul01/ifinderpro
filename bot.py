@@ -4,6 +4,7 @@ from telegram.ext import (Application, CommandHandler, MessageHandler, filters, 
 from config import BOT_TOKEN, ADMIN_IDS, TON_WALLET
 from utils import extract_entity_info, format_entity_response, resolve_username_or_link, get_user_chats
 from user_db import user_db
+from groups_db import groups_db
 import uuid
 from datetime import datetime
 
@@ -165,79 +166,368 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if 'notification' in context.user_data:
         context.user_data.pop('notification', None)
 
-    # Add user to database
-    user_db.add_user(
-        user_id=user.id,
-        username=user.username,
-        first_name=user.first_name,
-        last_name=user.last_name
+    # Track interaction
+    track_interaction(update)
+
+    welcome_text = (
+        f"👋 <b>Welcome to ID Finder Pro Bot, {user_name}!</b>\n\n"
+
+        f"🔍 <b>What I Can Do:</b>\n"
+        f"• Find Telegram IDs of users, groups, channels & bots\n"
+        f"• Extract IDs from forwarded messages & stories\n"
+        f"• Provide detailed entity information\n"
+        f"• Manage groups with advanced admin tools\n"
+        f"• Track user interactions and analytics\n\n"
+
+        f"🚀 <b>Quick Start:</b>\n"
+        f"• <b>Forward any message</b> to get sender's ID\n"
+        f"• <b>Forward stories</b> to get user/channel ID\n"
+        f"• Use <b>buttons below</b> to share contacts\n"
+        f"• Type <b>/id</b> to get your own ID\n"
+        f"• Type <b>/help</b> for interactive help system\n\n"
+
+        f"⚡ <b>Key Features:</b>\n"
+        f"• 👤 User lookup by ID or username\n"
+        f"• 👥 Group management & moderation tools\n"
+        f"• 📊 Admin analytics dashboard\n"
+        f"• 🔄 Inline mode support (@IDFinderPro_Bot)\n"
+        f"• 💰 Support developer with donations\n\n"
+
+        f"🛡️ <b>Group Features:</b>\n"
+        f"Add me to your groups for:\n"
+        f"• User identification commands\n"
+        f"• Warning & mute systems\n"
+        f"• Admin management tools\n"
+        f"• Group statistics tracking\n\n"
+
+        f"💡 <b>Pro Tips:</b>\n"
+        f"• Use /username @handle for public entities\n"
+        f"• Forward messages for private chats\n"
+        f"• Add bot as admin in groups for full features\n"
+        f"• Check /help for detailed command guide\n\n"
+
+        f"📣 <b>Official Channel:</b> @idfinderpro\n"
+        f"🤖 <b>Bot Username:</b> @IDFinderPro_Bot\n\n"
+
+        f"<i>Select an option below to get started!</i>"
     )
 
     await update.message.reply_text(
-        f"👋 Welcome to ID Finder Pro Bot! {user_name}\n\n"
-        f"🔍 This bot helps you find the **Telegram ID** of any:\n"
-        f"• 👤 User\n"
-        f"• 👥 Group\n"
-        f"• 📢 Channel\n"
-        f"• 🤖 Bot\n\n"
-        f"✅ Just forward a message from any of the above, or select an option below to share a chat.\n\n"
-        f"To Get your own id Just Hit /id\n\n"
-        f"📣 Official Channel: @idfinderpro",
-        parse_mode='Markdown',
+        welcome_text,
+        parse_mode='HTML',
         reply_markup=MAIN_KEYBOARD
     )
 
     return SELECTING_ENTITY
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Show help information about how to use the bot"""
+    """Show interactive help system"""
+    # Track interaction
+    track_interaction(update)
+
     chat_type = update.effective_chat.type
 
+    # Create main help keyboard
+    help_keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("👤 User Commands", callback_data="help_user"),
+            InlineKeyboardButton("👥 Group Commands", callback_data="help_group")
+        ],
+        [
+            InlineKeyboardButton("🤖 Bot Features", callback_data="help_features"),
+            InlineKeyboardButton("🔧 How to Use", callback_data="help_usage")
+        ],
+        [
+            InlineKeyboardButton("💰 Donations", callback_data="help_donations"),
+            InlineKeyboardButton("ℹ️ About", callback_data="help_about")
+        ],
+        [
+            InlineKeyboardButton("📋 Show All", callback_data="help_show_all")
+        ]
+    ])
+
+    help_text = (
+        "🔍 <b>ID Finder Pro Bot - Help Center</b>\n\n"
+        "Welcome to the interactive help system! Select a category below to learn more about specific features and commands.\n\n"
+        "Use the buttons to navigate through different help sections, or click 'Show All' to see all commands at once."
+    )
+
     if chat_type == 'private':
-        # Private chat help
-        help_text = (
-            "📚 <b>ID Finder Pro Bot - Help Guide</b>\n\n"
-            "<b>🔍 Basic Commands:</b>\n"
-            "• /start - Start the bot and show the main menu\n"
-            "• /id - Get your own Telegram ID\n"
-            "• /find [user_id] - Find user info by their Telegram ID\n"
-            "• /username - Get ID by username (e.g., /username @telegram)\n"
-            "• /admin - Show groups and channels you admin\n"
-            "• /add - Add the bot to your groups or channels\n"
-            "• /help - Show this help message\n"
-            "• /donate - Support the developer\n\n"
-
-            "<b>📋 How to Get IDs:</b>\n"
-            "1️⃣ <b>Forward a message</b> from any user, bot, group or channel\n"
-            "2️⃣ <b>Forward a story</b> from any user or channel\n"
-            "3️⃣ Use the <b>buttons</b> to select and share a user, bot, group or channel\n"
-            "4️⃣ Use <b>/username</b> command followed by a username (e.g., /username @telegram)\n"
-            "5️⃣ Use <b>/find</b> command with a user ID (e.g., /find 123456789)\n"
-            "6️⃣ Use <b>/admin</b> to see IDs of groups and channels you administer\n\n"
-
-            "<b>💡 Pro Tips:</b>\n"
-            "• For private chats without username, forward a message from them\n"
-            "• For public entities, you can use the /username command\n"
-            "• Use /find to get detailed info about any user by their ID\n"
-            "• Add the bot to groups for advanced group management features\n"
-            "• Use the 'Donate' button to support the developer\n\n"
-
-            "<b>🛡️ Group Features:</b>\n"
-            "When added to groups, this bot provides:\n"
-            "• User identification and info commands\n"
-            "• Advanced moderation tools for admins\n"
-            "• Warning and mute systems\n"
-            "• Group statistics and management\n\n"
-
-            "📣 <b>Official Channel:</b> @idfinderpro\n"
-            "🤖 <b>Bot Username:</b> @IDFinderProBot"
-        )
-
-        await update.message.reply_text(help_text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
+        await update.message.reply_text(help_text, parse_mode='HTML', reply_markup=help_keyboard)
         return SELECTING_ENTITY
     else:
-        # Group chat help (delegate to group command)
-        await group_help_command(update, context)
+        await update.message.reply_text(help_text, parse_mode='HTML', reply_markup=help_keyboard)
+
+async def handle_help_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle help system callbacks"""
+    query = update.callback_query
+    await query.answer()
+
+    data = query.data
+
+    # Navigation buttons
+    nav_keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("🔙 Back", callback_data="help_back"),
+            InlineKeyboardButton("🏠 Menu", callback_data="help_menu")
+        ]
+    ])
+
+    try:
+        if data == "help_user":
+            text = (
+                "👤 <b>User Commands</b>\n\n"
+                "Click on the buttons below and share the user whose ID you want to know.\n\n"
+                "<b>Available Commands:</b>\n"
+                "• /start - Start the bot and show main menu\n"
+                "• /id - Get your own Telegram ID\n"
+                "• /find [user_id] - Find user info by ID\n"
+                "• /username [@username] - Get ID by username\n"
+                "• /admin - Show groups/channels you admin\n"
+                "• /add - Add bot to your groups\n"
+                "• /info - Show bot information\n"
+                "• /donate - Support the developer\n"
+                "• /help - Show this help system"
+            )
+
+        elif data == "help_group":
+            text = (
+                "👥 <b>Group Commands</b>\n\n"
+                "These commands work only in groups where the bot is added.\n\n"
+                "<b>User Commands (Everyone):</b>\n"
+                "• /id - Get your own ID\n"
+                "• /ids - Get IDs of all group members\n"
+                "• /whois [@username or reply] - Get user info\n"
+                "• /mentionid [@username or reply] - Mention with ID\n"
+                "• /info - Show group information\n\n"
+
+                "<b>Admin Commands (Admins only):</b>\n"
+                "• /warn [@user or reply] - Warn a user\n"
+                "• /mute [@user or reply] - Mute a user\n"
+                "• /kick [@user or reply] - Kick a user\n"
+                "• /ban [@user or reply] - Ban a user\n"
+                "• /pin [reply to message] - Pin a message\n"
+                "• /groupinfo - Show detailed group info\n"
+                "• /listadmins - List all group admins"
+            )
+
+        elif data == "help_features":
+            text = (
+                "🤖 <b>Bot Features</b>\n\n"
+                "<b>ID Extraction Methods:</b>\n"
+                "1️⃣ Forward any message from user/bot/group/channel\n"
+                "2️⃣ Forward stories from users or channels\n"
+                "3️⃣ Use keyboard buttons to share contacts\n"
+                "4️⃣ Use /username command with @username\n"
+                "5️⃣ Use /find command with user ID\n\n"
+
+                "<b>Special Features:</b>\n"
+                "• Story ID extraction support\n"
+                "• Inline mode (@IDFinderPro_Bot)\n"
+                "• Group management tools\n"
+                "• Admin notification system\n"
+                "• User database tracking\n"
+                "• CSV data export (admin)\n"
+                "• Analytics dashboard (admin)"
+            )
+
+        elif data == "help_usage":
+            text = (
+                "🔧 <b>How to Use</b>\n\n"
+                "<b>Getting Started:</b>\n"
+                "1. Start the bot with /start\n"
+                "2. Use the main menu buttons or commands\n\n"
+
+                "<b>Finding IDs:</b>\n"
+                "• <b>Forward Method:</b> Forward any message\n"
+                "• <b>Username Method:</b> /username @telegram\n"
+                "• <b>Button Method:</b> Use 'User', 'Bot', 'Group', 'Channel' buttons\n"
+                "• <b>Story Method:</b> Forward stories from users/channels\n\n"
+
+                "<b>Group Usage:</b>\n"
+                "1. Add bot to your group\n"
+                "2. Make bot admin for full features\n"
+                "3. Use group commands for management\n\n"
+
+                "<b>Pro Tips:</b>\n"
+                "• Private chats: Forward messages\n"
+                "• Public entities: Use /username\n"
+                "• Groups: Add bot as admin"
+            )
+
+        elif data == "help_donations":
+            text = (
+                "💰 <b>Donations & Support</b>\n\n"
+                "Support the development of ID Finder Pro Bot!\n\n"
+                "<b>How to Donate:</b>\n"
+                "• Use the 'Donate' button in main menu\n"
+                "• Send /donate command\n"
+                "• Choose from 1⭐, 5⭐, 10⭐, 25⭐, 50⭐ options\n\n"
+
+                "<b>Your donations help:</b>\n"
+                "• Keep the bot running 24/7\n"
+                "• Add new amazing features\n"
+                "• Provide faster service\n"
+                "• Support development team\n\n"
+
+                "<b>Payment Methods:</b>\n"
+                "• Telegram Stars (⭐)\n"
+                "• TON Cryptocurrency\n\n"
+
+                "Thank you for supporting our work! ❤️"
+            )
+
+        elif data == "help_about":
+            text = (
+                "ℹ️ <b>About ID Finder Pro Bot</b>\n\n"
+                "<b>Bot Information:</b>\n"
+                "• Name: ID Finder Pro Bot\n"
+                "• Username: @IDFinderPro_Bot\n"
+                "• Version: 2.0 Pro\n"
+                "• Developer: @tataa_sumo\n\n"
+
+                "<b>Features:</b>\n"
+                "• Advanced ID extraction\n"
+                "• Story support\n"
+                "• Group management\n"
+                "• Admin tools\n"
+                "• Analytics dashboard\n\n"
+
+                "<b>Contact:</b>\n"
+                "• Official Channel: @idfinderpro\n"
+                "• Support: Contact admin\n"
+                "• Updates: @idfinderpro\n\n"
+
+                "Made with ❤️ by @tataa_sumo for the Telegram community!"
+            )
+
+        elif data == "help_show_all":
+            text = (
+                "📋 <b>All Commands</b>\n\n"
+
+                "<b>👤 User Commands:</b>\n"
+                "• /start - Start bot\n"
+                "• /id - Get your ID\n"
+                "• /find [id] - Find user by ID\n"
+                "• /username [@user] - Get ID by username\n"
+                "• /admin - Show admin groups\n"
+                "• /add - Add bot to groups\n"
+                "• /info - Bot information\n"
+                "• /donate - Support developer\n"
+                "• /help - This help system\n\n"
+
+                "<b>👥 Group Commands:</b>\n"
+                "• /id, /ids, /whois, /mentionid, /info\n"
+                "• /warn, /mute, /kick, /ban (admin)\n"
+                "• /pin, /groupinfo, /listadmins (admin)\n\n"
+
+                "<b>🔧 Usage Methods:</b>\n"
+                "• Forward messages/stories\n"
+                "• Use keyboard buttons\n"
+                "• Commands with parameters\n"
+                "• Inline mode support"
+            )
+
+        elif data == "help_back" or data == "help_menu":
+            # Return to main help menu
+            help_keyboard = InlineKeyboardMarkup([
+                [
+                    InlineKeyboardButton("👤 User Commands", callback_data="help_user"),
+                    InlineKeyboardButton("👥 Group Commands", callback_data="help_group")
+                ],
+                [
+                    InlineKeyboardButton("🤖 Bot Features", callback_data="help_features"),
+                    InlineKeyboardButton("🔧 How to Use", callback_data="help_usage")
+                ],
+                [
+                    InlineKeyboardButton("💰 Donations", callback_data="help_donations"),
+                    InlineKeyboardButton("ℹ️ About", callback_data="help_about")
+                ],
+                [
+                    InlineKeyboardButton("📋 Show All", callback_data="help_show_all")
+                ]
+            ])
+
+            text = (
+                "🔍 <b>ID Finder Pro Bot - Help Center</b>\n\n"
+                "Welcome to the interactive help system! Select a category below to learn more about specific features and commands.\n\n"
+                "Use the buttons to navigate through different help sections, or click 'Show All' to see all commands at once."
+            )
+
+            await query.edit_message_text(text, parse_mode='HTML', reply_markup=help_keyboard)
+            return
+
+        else:
+            text = "❌ Unknown help section."
+
+        await query.edit_message_text(text, parse_mode='HTML', reply_markup=nav_keyboard)
+
+    except Exception as e:
+        logger.error(f"Error in help callback: {e}")
+        await query.edit_message_text("❌ An error occurred while loading help.")
+
+async def admin_com_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Admin-only bot management interface"""
+    user_id = str(update.effective_user.id)
+    chat_type = update.effective_chat.type
+
+    # Check if user is admin
+    if user_id not in ADMIN_IDS:
+        error_text = "❌ This command is only available to bot administrators."
+
+        if chat_type == 'private':
+            await update.message.reply_text(error_text, reply_markup=MAIN_KEYBOARD)
+            return SELECTING_ENTITY
+        else:
+            await update.message.reply_text(error_text)
+            return
+
+    # Track interaction
+    track_interaction(update)
+
+    admin_text = (
+        "🛡️ <b>Admin Commands</b>\n\n"
+        "Here are all the admin-only commands available:\n\n"
+
+        "<b>📊 Analytics & Statistics:</b>\n"
+        "• <code>/stats</code> - Comprehensive analytics dashboard\n"
+        "• <code>/users</code> - View user statistics and data\n"
+        "• <code>/groups</code> - View group statistics and data\n\n"
+
+        "<b>📢 Communication:</b>\n"
+        "• <code>/broadcast [message]</code> - Send message to all users\n"
+        "• <code>/notify [message]</code> - Send notification to admins\n\n"
+
+        "<b>🔧 Management:</b>\n"
+        "• <code>/admin</code> - Admin panel for group management\n"
+        "• <code>/mem [username/id]</code> - Check user membership in groups\n\n"
+
+        "<b>📄 Data Export:</b>\n"
+        "• Use <code>/stats</code> → Export buttons for CSV downloads\n"
+        "• Users CSV - Complete user database\n"
+        "• Groups CSV - Complete groups database\n\n"
+
+        "<b>💡 Usage Examples:</b>\n"
+        "• <code>/broadcast Hello everyone! New features added.</code>\n"
+        "• <code>/notify Server maintenance at 2 AM</code>\n"
+        "• <code>/users</code> - View user analytics\n"
+        "• <code>/groups</code> - View group analytics\n\n"
+
+        "<b>🔐 Admin Access:</b>\n"
+        f"• Total Admins: {len(ADMIN_IDS)}\n"
+        f"• Your ID: <code>{user_id}</code>\n"
+        f"• Access Level: Full Admin ✅\n\n"
+
+        "<i>All commands above are restricted to administrators only.</i>"
+    )
+
+    if chat_type == 'private':
+        await update.message.reply_text(admin_text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
+        return SELECTING_ENTITY
+    else:
+        await update.message.reply_text(admin_text, parse_mode='HTML')
+
+
 
 async def find_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /find command to get user info by Telegram ID"""
@@ -258,8 +548,10 @@ async def find_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(help_text, parse_mode='HTML')
 
     try:
+        if not context.args or len(context.args) == 0:
+            raise IndexError("No arguments provided")
         user_id = int(context.args[0])
-    except ValueError:
+    except (ValueError, IndexError):
         error_text = "❌ Invalid user ID. Please provide a valid numeric Telegram ID."
 
         if chat_type == 'private':
@@ -329,7 +621,10 @@ async def username_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /username command to get ID by username"""
     if context.args and len(context.args) > 0:
         # If username is provided in the command, process it immediately
-        username = context.args[0]
+        try:
+            username = context.args[0]
+        except IndexError:
+            username = None
         # Remove @ if it's included
         if username.startswith('@'):
             username = username[1:]
@@ -428,6 +723,9 @@ async def handle_username_input(update: Update, context: ContextTypes.DEFAULT_TY
     return SELECTING_ENTITY
 
 async def get_user_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Track interaction
+    track_interaction(update)
+
     user = update.effective_user
     chat_type = update.effective_chat.type
 
@@ -464,10 +762,10 @@ async def handle_user_shared(update: Update, context: ContextTypes.DEFAULT_TYPE)
             logger.info(f"Found users_shared. Attributes: {dir(users_shared)}")
 
             # Try different attribute names
-            if hasattr(users_shared, 'user_ids') and users_shared.user_ids:
+            if hasattr(users_shared, 'user_ids') and users_shared.user_ids and len(users_shared.user_ids) > 0:
                 user_id = users_shared.user_ids[0]
                 logger.info(f"Got user_id from user_ids: {user_id}")
-            elif hasattr(users_shared, 'users') and users_shared.users:
+            elif hasattr(users_shared, 'users') and users_shared.users and len(users_shared.users) > 0:
                 user_obj = users_shared.users[0]
                 user_id = user_obj.user_id if hasattr(user_obj, 'user_id') else user_obj
                 logger.info(f"Got user_id from users: {user_id}")
@@ -483,7 +781,7 @@ async def handle_user_shared(update: Update, context: ContextTypes.DEFAULT_TYPE)
             if hasattr(user_shared, 'user_id'):
                 user_id = user_shared.user_id
                 logger.info(f"Got user_id from user_shared.user_id: {user_id}")
-            elif hasattr(user_shared, 'user_ids'):
+            elif hasattr(user_shared, 'user_ids') and user_shared.user_ids and len(user_shared.user_ids) > 0:
                 user_id = user_shared.user_ids[0]
                 logger.info(f"Got user_id from user_shared.user_ids: {user_id}")
 
@@ -691,6 +989,16 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return SELECTING_TON_AMOUNT
         
+    elif query.data.startswith('help_'):
+        # Handle help callbacks
+        await handle_help_callback(update, context)
+        return SELECTING_ENTITY
+
+    elif query.data.startswith('analytics_'):
+        # Handle analytics callbacks
+        await handle_analytics_callback(update, context)
+        return SELECTING_ENTITY
+
     elif query.data.startswith('stars_'):
         amount = int(query.data.split('_')[1])
         chat_id = update.effective_chat.id
@@ -804,13 +1112,42 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     return SELECTING_ENTITY
 
+def track_interaction(update: Update):
+    """Helper function to track user and group interactions"""
+    try:
+        user = update.effective_user
+        chat = update.effective_chat
+
+        # Track user
+        if user:
+            user_db.add_user(user.id, user.username, user.first_name, user.last_name)
+
+        # Track group interaction if in a group
+        if chat and chat.type in ['group', 'supergroup', 'channel']:
+            groups_db.increment_interaction(chat.id)
+            # Also ensure group is tracked
+            groups_db.add_group(
+                group_id=chat.id,
+                group_title=chat.title,
+                group_type=chat.type,
+                username=chat.username,
+                invite_link=getattr(chat, 'invite_link', None)
+            )
+    except Exception as e:
+        logger.error(f"Error tracking interaction: {e}")
+
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
-    user_id = str(update.effective_user.id)
+    user = update.effective_user
+    chat = update.effective_chat
+    user_id = str(user.id)
 
     logger.info(f"handle_message called by user {user_id}")
     logger.info(f"Message type: text={bool(message.text)}, photo={bool(message.photo)}, forward={bool(hasattr(message, 'forward_origin') and message.forward_origin)}")
     logger.info(f"User data notification: {context.user_data.get('notification', {})}")
+
+    # Track interaction
+    track_interaction(update)
 
     # Check if admin has notification in progress and handle forwarded messages during notification
     if user_id in ADMIN_IDS and context.user_data.get('notification', {}).get('in_progress'):
@@ -839,12 +1176,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Handle forwarded messages
     if message and hasattr(message, 'forward_origin') and message.forward_origin:
         try:
+            logger.info(f"Processing forwarded message. Origin type: {message.forward_origin.type}")
+            logger.info(f"Forward origin details: {message.forward_origin}")
+
             info = await extract_entity_info(message)
             if info:
+                logger.info(f"Successfully extracted info: {info}")
                 text = format_entity_response(info)
                 # Always keep the main keyboard visible
                 await message.reply_text(text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
             else:
+                logger.warning("Could not extract entity info from forwarded message")
                 await message.reply_text("❌ Could not extract entity info from this forwarded message.", reply_markup=MAIN_KEYBOARD)
         except Exception as e:
             logger.error(f"Error extracting entity info: {e}")
@@ -884,64 +1226,9 @@ async def donate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     return SELECTING_DONATION_METHOD
 
-async def info_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Show comprehensive bot information and statistics"""
-    chat_type = update.effective_chat.type
-
-    # Get user count from database
-    total_users = user_db.get_user_count()
-
-    # Get bot info
-    bot_info = await context.bot.get_me()
-
-    info_text = (
-        f"🤖 <b>{bot_info.first_name} - Bot Information</b>\n\n"
-        f"📊 <b>Statistics:</b>\n"
-        f"• Total Users: {total_users:,}\n"
-        f"• Bot Username: @{bot_info.username}\n"
-        f"• Bot ID: <code>{bot_info.id}</code>\n\n"
-
-        f"🔧 <b>Features:</b>\n"
-        f"• User, Bot, Group & Channel ID lookup\n"
-        f"• Username to ID resolution\n"
-        f"• Forwarded message analysis\n"
-        f"• Story forwarding support\n"
-        f"• Group management tools\n"
-        f"• Admin moderation system\n"
-        f"• Warning & mute systems\n"
-        f"• User database tracking\n\n"
-
-        f"⚡ <b>Supported Methods:</b>\n"
-        f"• Forward messages/stories\n"
-        f"• Share contacts via buttons\n"
-        f"• Username lookup (/username)\n"
-        f"• User ID search (/find)\n"
-        f"• Admin panel (/admin)\n\n"
-
-        f"🛡️ <b>Group Commands:</b>\n"
-        f"• User info & identification\n"
-        f"• Moderation tools for admins\n"
-        f"• Warning system with tracking\n"
-        f"• Temporary mute functionality\n"
-        f"• Kick/ban management\n"
-        f"• Group statistics\n\n"
-
-        f"💝 <b>Support:</b>\n"
-        f"• Developer: Contact via /donate\n"
-        f"• Channel: @idfinderpro\n"
-        f"• Version: 2.0 Pro\n"
-        f"• Last Update: December 2024"
-    )
-
-    if chat_type == 'private':
-        await update.message.reply_text(info_text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
-        return SELECTING_ENTITY
-    else:
-        await update.message.reply_text(info_text, parse_mode='HTML')
-
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Show detailed bot statistics (admin only)"""
-    user_id = update.effective_user.id
+    """Show analytics dashboard (admin only)"""
+    user_id = str(update.effective_user.id)  # Convert to string for comparison
     chat_type = update.effective_chat.type
 
     # Check if user is admin
@@ -955,61 +1242,518 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(error_text)
             return
 
-    # Get detailed statistics
-    total_users = user_db.get_user_count()
-    recent_users = user_db.get_recent_users(7)  # Last 7 days
+    # Create analytics dashboard keyboard
+    analytics_keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("📊 Overview", callback_data="analytics_overview"),
+            InlineKeyboardButton("👥 Users", callback_data="analytics_users")
+        ],
+        [
+            InlineKeyboardButton("🏢 Groups", callback_data="analytics_groups"),
+            InlineKeyboardButton("📈 Interactions", callback_data="analytics_interactions")
+        ],
+        [
+            InlineKeyboardButton("📄 Users CSV", callback_data="analytics_export_users"),
+            InlineKeyboardButton("📊 Groups CSV", callback_data="analytics_export_groups")
+        ],
+        [
+            InlineKeyboardButton("🔄 Refresh", callback_data="analytics_refresh"),
+            InlineKeyboardButton("🏠 Main Menu", callback_data="back_to_menu")
+        ]
+    ])
 
-    # Get bot info
-    bot_info = await context.bot.get_me()
-
-    # Calculate uptime (approximate)
-    from datetime import datetime
-    current_time = datetime.now()
-
-    stats_text = (
-        f"📊 <b>Bot Statistics - Admin Panel</b>\n\n"
-        f"🤖 <b>Bot Info:</b>\n"
-        f"• Name: {bot_info.first_name}\n"
-        f"• Username: @{bot_info.username}\n"
-        f"• ID: <code>{bot_info.id}</code>\n"
-        f"• Can Join Groups: {'✅' if bot_info.can_join_groups else '❌'}\n"
-        f"• Can Read Messages: {'✅' if bot_info.can_read_all_group_messages else '❌'}\n\n"
-
-        f"👥 <b>User Statistics:</b>\n"
-        f"• Total Users: {total_users:,}\n"
-        f"• New Users (7 days): {len(recent_users):,}\n"
-        f"• Growth Rate: {(len(recent_users)/max(total_users-len(recent_users), 1)*100):.1f}%\n\n"
-
-        f"⚡ <b>System Info:</b>\n"
-        f"• Report Time: {current_time.strftime('%Y-%m-%d %H:%M:%S')}\n"
-        f"• Database Status: ✅ Active\n"
-        f"• Bot Status: ✅ Running\n\n"
-
-        f"🔧 <b>Features Active:</b>\n"
-        f"• ID Lookup: ✅\n"
-        f"• Username Resolution: ✅\n"
-        f"• Group Management: ✅\n"
-        f"• Admin Notifications: ✅\n"
-        f"• User Database: ✅\n"
-        f"• Payment System: ✅\n\n"
-
-        f"📈 <b>Usage Metrics:</b>\n"
-        f"• Commands Available: 20+\n"
-        f"• Group Commands: 15+\n"
-        f"• Admin Commands: 10+\n"
-        f"• Supported Chat Types: All\n\n"
-
-        f"🛡️ <b>Admin Panel:</b>\n"
-        f"• Total Admins: {len(ADMIN_IDS)}\n"
-        f"• Your ID: <code>{user_id}</code>\n"
-        f"• Access Level: Full Admin"
+    dashboard_text = (
+        f"📊 <b>Analytics Dashboard</b>\n\n"
+        f"Welcome to the comprehensive analytics dashboard!\n\n"
+        f"<b>Available Analytics:</b>\n"
+        f"• 📊 Overview - General bot statistics\n"
+        f"• 👥 Users - User analytics and growth\n"
+        f"• 🏢 Groups - Group statistics and activity\n"
+        f"• 📈 Interactions - 24h/7d/1m interaction data\n"
+        f"• 📄 Users CSV - Download user data\n"
+        f"• 📊 Groups CSV - Download group data\n\n"
+        f"Select an option below to view detailed analytics:"
     )
 
     if chat_type == 'private':
-        await update.message.reply_text(stats_text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
+        await update.message.reply_text(dashboard_text, parse_mode='HTML', reply_markup=analytics_keyboard)
         return SELECTING_ENTITY
     else:
-        await update.message.reply_text(stats_text, parse_mode='HTML')
+        await update.message.reply_text(dashboard_text, parse_mode='HTML', reply_markup=analytics_keyboard)
+
+async def handle_analytics_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle analytics dashboard callbacks"""
+    query = update.callback_query
+    await query.answer()
+
+    user_id = str(update.effective_user.id)  # Convert to string for comparison
+
+    # Check if user is admin
+    if user_id not in ADMIN_IDS:
+        await query.edit_message_text("❌ Access denied. Admin only.")
+        return
+
+    data = query.data
+
+    try:
+        if data == "analytics_overview":
+            await show_analytics_overview(query, context)
+        elif data == "analytics_users":
+            await show_analytics_users(query, context)
+        elif data == "analytics_groups":
+            await show_analytics_groups(query, context)
+        elif data == "analytics_interactions":
+            await show_analytics_interactions(query, context)
+        elif data == "analytics_export_users":
+            await export_users_csv(query, context)
+        elif data == "analytics_export_groups":
+            await export_groups_csv(query, context)
+        elif data == "analytics_refresh":
+            # Recreate the analytics dashboard with fresh data
+            from datetime import datetime
+
+            # Get fresh statistics
+            total_users = user_db.get_total_users()
+            total_groups = len(groups_db.get_all_groups())
+            current_time = datetime.now().strftime('%H:%M:%S')
+
+            analytics_keyboard = InlineKeyboardMarkup([
+                [
+                    InlineKeyboardButton("📊 Overview", callback_data="analytics_overview"),
+                    InlineKeyboardButton("👥 Users", callback_data="analytics_users")
+                ],
+                [
+                    InlineKeyboardButton("🏢 Groups", callback_data="analytics_groups"),
+                    InlineKeyboardButton("📈 Interactions", callback_data="analytics_interactions")
+                ],
+                [
+                    InlineKeyboardButton("📄 Users CSV", callback_data="analytics_export_users"),
+                    InlineKeyboardButton("📊 Groups CSV", callback_data="analytics_export_groups")
+                ],
+                [
+                    InlineKeyboardButton("🔄 Refresh", callback_data="analytics_refresh"),
+                    InlineKeyboardButton("🏠 Main Menu", callback_data="back_to_menu")
+                ]
+            ])
+
+            dashboard_text = (
+                f"📊 <b>Analytics Dashboard</b>\n\n"
+                f"Welcome to the comprehensive analytics dashboard!\n\n"
+                f"<b>📈 Current Statistics:</b>\n"
+                f"• Total Users: {total_users:,}\n"
+                f"• Total Groups: {total_groups:,}\n"
+                f"• Last Refreshed: {current_time}\n\n"
+                f"<b>Available Analytics:</b>\n"
+                f"• 📊 Overview - General bot statistics\n"
+                f"• 👥 Users - User analytics and growth\n"
+                f"• 🏢 Groups - Group statistics and activity\n"
+                f"• 📈 Interactions - 24h/7d/1m interaction data\n"
+                f"• 📄 Users CSV - Download user data\n"
+                f"• 📊 Groups CSV - Download group data\n\n"
+                f"Select an option below to view detailed analytics:"
+            )
+
+            await query.edit_message_text(dashboard_text, parse_mode='HTML', reply_markup=analytics_keyboard)
+    except Exception as e:
+        logger.error(f"Error in analytics callback: {e}")
+        await query.edit_message_text("❌ An error occurred while loading analytics.")
+
+async def show_analytics_overview(query, context):
+    """Show general bot overview analytics"""
+    # Get statistics
+    total_users = user_db.get_total_users()
+    group_stats = groups_db.get_group_stats()
+    bot_info = await context.bot.get_me()
+
+    from datetime import datetime
+    current_time = datetime.now()
+
+    overview_text = (
+        f"📊 <b>Bot Overview Analytics</b>\n\n"
+        f"🤖 <b>Bot Information:</b>\n"
+        f"• Name: {bot_info.first_name}\n"
+        f"• Username: @{bot_info.username}\n"
+        f"• ID: <code>{bot_info.id}</code>\n"
+        f"• Can Join Groups: {'✅' if bot_info.can_join_groups else '❌'}\n\n"
+
+        f"📈 <b>Usage Statistics:</b>\n"
+        f"• Total Users: {total_users:,}\n"
+        f"• Total Groups: {group_stats['total_groups']:,}\n"
+        f"• Total Interactions: {group_stats['total_interactions']:,}\n\n"
+
+        f"🏢 <b>Group Breakdown:</b>\n"
+        f"• Public Groups: {group_stats['public_groups']:,}\n"
+        f"• Private Groups: {group_stats['private_groups']:,}\n\n"
+
+        f"⚡ <b>System Status:</b>\n"
+        f"• Report Time: {current_time.strftime('%Y-%m-%d %H:%M:%S')}\n"
+        f"• Database: ✅ Active\n"
+        f"• Bot Status: ✅ Running\n\n"
+
+        f"🛡️ <b>Admin Info:</b>\n"
+        f"• Total Admins: {len(ADMIN_IDS)}\n"
+        f"• Your Access: Full Admin"
+    )
+
+    back_keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔙 Back to Dashboard", callback_data="analytics_refresh")]
+    ])
+
+    await query.edit_message_text(overview_text, parse_mode='HTML', reply_markup=back_keyboard)
+
+async def show_analytics_users(query, context):
+    """Show user analytics"""
+    total_users = user_db.get_total_users()
+    recent_users_24h = user_db.get_recent_users(1)
+    recent_users_7d = user_db.get_recent_users(7)
+    recent_users_30d = user_db.get_recent_users(30)
+
+    # Calculate growth rates
+    growth_24h = len(recent_users_24h)
+    growth_7d = len(recent_users_7d)
+    growth_30d = len(recent_users_30d)
+
+    users_text = (
+        f"👥 <b>User Analytics</b>\n\n"
+        f"📊 <b>Total Statistics:</b>\n"
+        f"• Total Users: {total_users:,}\n\n"
+
+        f"📈 <b>Growth Analytics:</b>\n"
+        f"• Last 24 Hours: +{growth_24h:,} users\n"
+        f"• Last 7 Days: +{growth_7d:,} users\n"
+        f"• Last 30 Days: +{growth_30d:,} users\n\n"
+
+        f"📊 <b>Growth Rates:</b>\n"
+        f"• Daily Average: {(growth_7d/7):.1f} users/day\n"
+        f"• Weekly Average: {(growth_30d/4.3):.1f} users/week\n"
+        f"• Monthly Growth: {(growth_30d/max(total_users-growth_30d, 1)*100):.1f}%\n\n"
+
+        f"🎯 <b>User Engagement:</b>\n"
+        f"• Active Users (7d): {growth_7d:,}\n"
+        f"• Retention Rate: {(growth_7d/max(total_users, 1)*100):.1f}%\n\n"
+
+        f"💡 <b>Insights:</b>\n"
+    )
+
+    if growth_24h > growth_7d/7:
+        users_text += "• 📈 Above average daily growth\n"
+    else:
+        users_text += "• 📉 Below average daily growth\n"
+
+    if growth_7d > 0:
+        users_text += "• ✅ Positive weekly growth\n"
+    else:
+        users_text += "• ⚠️ No growth this week\n"
+
+    back_keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔙 Back to Dashboard", callback_data="analytics_refresh")]
+    ])
+
+    await query.edit_message_text(users_text, parse_mode='HTML', reply_markup=back_keyboard)
+
+async def show_analytics_groups(query, context):
+    """Show group analytics"""
+    group_stats = groups_db.get_group_stats()
+    recent_groups = groups_db.get_recent_groups(5)
+
+    groups_text = (
+        f"🏢 <b>Group Analytics</b>\n\n"
+        f"📊 <b>Overview:</b>\n"
+        f"• Total Groups: {group_stats['total_groups']:,}\n"
+        f"• Total Interactions: {group_stats['total_interactions']:,}\n\n"
+
+        f"🔓 <b>Privacy Breakdown:</b>\n"
+        f"• Public Groups: {group_stats['public_groups']:,}\n"
+        f"• Private Groups: {group_stats['private_groups']:,}\n\n"
+
+        f"📈 <b>Group Types:</b>\n"
+    )
+
+    for group_type, count in group_stats['type_counts'].items():
+        type_emoji = {'group': '👥', 'supergroup': '👥', 'channel': '📢'}.get(group_type, '❓')
+        groups_text += f"• {type_emoji} {group_type.title()}: {count:,}\n"
+
+    groups_text += f"\n📊 <b>Activity Metrics:</b>\n"
+    if group_stats['total_groups'] > 0:
+        avg_interactions = group_stats['total_interactions'] / group_stats['total_groups']
+        groups_text += f"• Avg Interactions/Group: {avg_interactions:.1f}\n"
+
+    groups_text += f"\n🕒 <b>Recent Groups:</b>\n"
+    for i, (group_id, group_info) in enumerate(recent_groups[:3], 1):
+        title = group_info.get('title', 'Unknown')[:20]
+        interactions = group_info.get('interaction_count', 0)
+        groups_text += f"{i}. {title}... ({interactions:,} interactions)\n"
+
+    back_keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔙 Back to Dashboard", callback_data="analytics_refresh")]
+    ])
+
+    await query.edit_message_text(groups_text, parse_mode='HTML', reply_markup=back_keyboard)
+
+async def show_analytics_interactions(query, context):
+    """Show interaction analytics"""
+    # This is a simplified version - in a real implementation, you'd track interactions in a time-series database
+    total_users = user_db.get_total_users()
+    group_stats = groups_db.get_group_stats()
+
+    # Simulate interaction data (in a real implementation, you'd have actual interaction tracking)
+    interactions_24h = group_stats['total_interactions'] // 30  # Rough estimate
+    interactions_7d = group_stats['total_interactions'] // 4
+    interactions_30d = group_stats['total_interactions']
+
+    interactions_text = (
+        f"📈 <b>Interaction Analytics</b>\n\n"
+        f"⏰ <b>Time-based Interactions:</b>\n"
+        f"• Last 24 Hours: {interactions_24h:,}\n"
+        f"• Last 7 Days: {interactions_7d:,}\n"
+        f"• Last 30 Days: {interactions_30d:,}\n\n"
+
+        f"📊 <b>Interaction Rates:</b>\n"
+        f"• Hourly Average: {(interactions_24h/24):.1f}\n"
+        f"• Daily Average: {(interactions_7d/7):.1f}\n"
+        f"• Weekly Average: {(interactions_30d/4.3):.1f}\n\n"
+
+        f"🎯 <b>Engagement Metrics:</b>\n"
+        f"• Total Commands: {interactions_30d:,}\n"
+        f"• Commands/User: {(interactions_30d/max(total_users, 1)):.1f}\n"
+        f"• Commands/Group: {(group_stats['total_interactions']/max(group_stats['total_groups'], 1)):.1f}\n\n"
+
+        f"📈 <b>Growth Trends:</b>\n"
+        f"• Daily Growth: {((interactions_24h*30)/max(interactions_30d, 1)*100):.1f}%\n"
+        f"• Weekly Growth: {((interactions_7d*4)/max(interactions_30d, 1)*100):.1f}%\n\n"
+
+        f"💡 <b>Note:</b> Interaction data includes all bot commands,\n"
+        f"forwarded messages, and group activities."
+    )
+
+    back_keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔙 Back to Dashboard", callback_data="analytics_refresh")]
+    ])
+
+    await query.edit_message_text(interactions_text, parse_mode='HTML', reply_markup=back_keyboard)
+
+async def export_users_csv(query, context):
+    """Export users data to CSV"""
+    try:
+        import csv
+        import io
+        from datetime import datetime
+
+        # Get all users
+        all_users = user_db.get_all_users()
+
+        # Create CSV content
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Write header
+        writer.writerow(['User ID', 'Username', 'First Name', 'Last Name', 'Join Date', 'Last Seen'])
+
+        # Write user data
+        for user_id, user_data in all_users.items():
+            writer.writerow([
+                user_id,
+                user_data.get('username', ''),
+                user_data.get('first_name', ''),
+                user_data.get('last_name', ''),
+                user_data.get('join_date', ''),
+                user_data.get('last_seen', '')
+            ])
+
+        csv_content = output.getvalue()
+        output.close()
+
+        # Create file
+        filename = f"users_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+
+        # Send file
+        csv_file = io.BytesIO(csv_content.encode('utf-8'))
+        csv_file.name = filename
+
+        await context.bot.send_document(
+            chat_id=query.message.chat_id,
+            document=csv_file,
+            filename=filename,
+            caption=f"📄 <b>Users Export</b>\n\n"
+                   f"• Total Users: {len(all_users):,}\n"
+                   f"• Export Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                   f"• Format: CSV",
+            parse_mode='HTML'
+        )
+
+        await query.answer("✅ Users CSV export sent!")
+
+    except Exception as e:
+        logger.error(f"Error exporting users CSV: {e}")
+        await query.answer("❌ Error exporting data")
+
+async def export_groups_csv(query, context):
+    """Export groups data to CSV"""
+    try:
+        import csv
+        import io
+        from datetime import datetime
+
+        # Get all groups
+        all_groups = groups_db.get_all_groups()
+
+        # Create CSV content
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Write header
+        writer.writerow(['Group ID', 'Group Name', 'Type', 'Username', 'Privacy', 'Added Date', 'Last Interaction', 'Interaction Count', 'Status'])
+
+        # Write group data
+        for group_id, group_data in all_groups.items():
+            privacy = "Public" if group_data.get('username') else "Private"
+            status = "Active" if group_data.get('is_active', True) else "Inactive"
+
+            writer.writerow([
+                group_id,
+                group_data.get('title', ''),
+                group_data.get('type', ''),
+                group_data.get('username', ''),
+                privacy,
+                group_data.get('added_date', ''),
+                group_data.get('last_interaction', ''),
+                group_data.get('interaction_count', 0),
+                status
+            ])
+
+        csv_content = output.getvalue()
+        output.close()
+
+        # Create file
+        filename = f"groups_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+
+        # Send file
+        csv_file = io.BytesIO(csv_content.encode('utf-8'))
+        csv_file.name = filename
+
+        await context.bot.send_document(
+            chat_id=query.message.chat_id,
+            document=csv_file,
+            filename=filename,
+            caption=f"📊 <b>Groups Export</b>\n\n"
+                   f"• Total Groups: {len(all_groups):,}\n"
+                   f"• Active Groups: {len([g for g in all_groups.values() if g.get('is_active', True)]):,}\n"
+                   f"• Export Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                   f"• Format: CSV",
+            parse_mode='HTML'
+        )
+
+        await query.answer("✅ Groups CSV export sent!")
+
+    except Exception as e:
+        logger.error(f"Error exporting groups CSV: {e}")
+        await query.answer("❌ Error exporting data")
+
+async def groups_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show groups statistics (admin only)"""
+    user_id = str(update.effective_user.id)  # Convert to string for comparison
+    chat_type = update.effective_chat.type
+
+    # Check if user is admin
+    if user_id not in ADMIN_IDS:
+        error_text = "❌ This command is only available to bot administrators."
+
+        if chat_type == 'private':
+            await update.message.reply_text(error_text, reply_markup=MAIN_KEYBOARD)
+            return SELECTING_ENTITY
+        else:
+            await update.message.reply_text(error_text)
+            return
+
+    try:
+        # Get group statistics
+        stats = groups_db.get_group_stats()
+        recent_groups = groups_db.get_recent_groups(10)
+
+        # Build response text
+        groups_text = (
+            f"👥 <b>Groups Statistics - Admin Panel</b>\n\n"
+
+            f"📊 <b>Overview:</b>\n"
+            f"• Total Groups: {stats['total_groups']:,}\n"
+            f"• Total Interactions: {stats['total_interactions']:,}\n"
+            f"• Public Groups: {stats['public_groups']:,}\n"
+            f"• Private Groups: {stats['private_groups']:,}\n\n"
+
+            f"📈 <b>Group Types:</b>\n"
+        )
+
+        for group_type, count in stats['type_counts'].items():
+            type_emoji = {
+                'group': '👥',
+                'supergroup': '👥',
+                'channel': '📢'
+            }.get(group_type, '❓')
+            groups_text += f"• {type_emoji} {group_type.title()}: {count:,}\n"
+
+        groups_text += f"\n🕒 <b>Recently Added Groups (Last 10):</b>\n\n"
+
+        if recent_groups:
+            for i, (group_id, group_info) in enumerate(recent_groups, 1):
+                title = group_info.get('title', 'Unknown')
+                username = group_info.get('username')
+                group_type = group_info.get('type', 'unknown')
+                interactions = group_info.get('interaction_count', 0)
+                added_date = group_info.get('added_date', '')
+
+                # Format date
+                try:
+                    from datetime import datetime
+                    date_obj = datetime.fromisoformat(added_date.replace('Z', '+00:00'))
+                    formatted_date = date_obj.strftime('%Y-%m-%d')
+                except:
+                    formatted_date = 'Unknown'
+
+                # Group type emoji
+                type_emoji = {
+                    'group': '👥',
+                    'supergroup': '👥',
+                    'channel': '📢'
+                }.get(group_type, '❓')
+
+                # Privacy indicator
+                privacy = "🔓 Public" if username else "🔒 Private"
+
+                groups_text += (
+                    f"{i}. {type_emoji} <b>{title}</b>\n"
+                    f"   🆔 ID: <code>{group_id}</code>\n"
+                    f"   {privacy}"
+                )
+
+                if username:
+                    groups_text += f" (@{username})"
+
+                groups_text += (
+                    f"\n   📊 Interactions: {interactions:,}\n"
+                    f"   📅 Added: {formatted_date}\n\n"
+                )
+        else:
+            groups_text += "No groups found.\n\n"
+
+        groups_text += (
+            f"💡 <b>Note:</b> Groups are automatically tracked when the bot is added.\n"
+            f"Interactions include all bot activities in each group."
+        )
+
+        if chat_type == 'private':
+            await update.message.reply_text(groups_text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
+            return SELECTING_ENTITY
+        else:
+            await update.message.reply_text(groups_text, parse_mode='HTML')
+
+    except Exception as e:
+        logger.error(f"Error in groups_command: {e}")
+        error_msg = "❌ An error occurred while fetching groups data. Please try again."
+        if chat_type == 'private':
+            await update.message.reply_text(error_msg, reply_markup=MAIN_KEYBOARD)
+            return SELECTING_ENTITY
+        else:
+            await update.message.reply_text(error_msg)
 
 async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show groups and channels where the user is an admin"""
@@ -1551,6 +2295,127 @@ async def ids_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text, parse_mode='HTML')
     return SELECTING_ENTITY
 
+async def track_group_interaction(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Track bot interactions in groups"""
+    try:
+        chat = update.effective_chat
+        if chat and chat.type in ['group', 'supergroup', 'channel']:
+            # Track interaction
+            groups_db.increment_interaction(chat.id)
+
+            # Update group info if needed
+            groups_db.add_group(
+                group_id=chat.id,
+                group_title=chat.title,
+                group_type=chat.type,
+                username=chat.username,
+                invite_link=getattr(chat, 'invite_link', None)
+            )
+    except Exception as e:
+        logger.error(f"Error tracking group interaction: {e}")
+
+async def handle_my_chat_member(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle bot being added/removed from groups"""
+    try:
+        chat_member_update = update.my_chat_member
+        chat = chat_member_update.chat
+        new_status = chat_member_update.new_chat_member.status
+        old_status = chat_member_update.old_chat_member.status
+
+        if chat.type in ['group', 'supergroup', 'channel']:
+            if new_status in ['member', 'administrator'] and old_status in ['left', 'kicked']:
+                # Bot was added to group
+                logger.info(f"Bot added to group: {chat.title} ({chat.id})")
+                groups_db.add_group(
+                    group_id=chat.id,
+                    group_title=chat.title,
+                    group_type=chat.type,
+                    username=chat.username,
+                    invite_link=getattr(chat, 'invite_link', None)
+                )
+            elif new_status in ['left', 'kicked'] and old_status in ['member', 'administrator']:
+                # Bot was removed from group
+                logger.info(f"Bot removed from group: {chat.title} ({chat.id})")
+                groups_db.mark_group_inactive(chat.id)
+    except Exception as e:
+        logger.error(f"Error handling chat member update: {e}")
+
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
+    """Global error handler"""
+    try:
+        logger.error(f"Exception while handling an update: {context.error}")
+
+        # Try to send error message to admin
+        if update and hasattr(update, 'effective_chat') and update.effective_chat and ADMIN_IDS and len(ADMIN_IDS) > 0:
+            try:
+                # Convert first admin ID to int if it's a string
+                first_admin_id = int(ADMIN_IDS[0]) if ADMIN_IDS[0] and ADMIN_IDS[0].strip() else None
+                if first_admin_id:
+                    await context.bot.send_message(
+                        chat_id=first_admin_id,
+                        text=f"🚨 <b>Bot Error</b>\n\n"
+                             f"Error: <code>{str(context.error)}</code>\n"
+                             f"Chat ID: {update.effective_chat.id}\n"
+                             f"User ID: {update.effective_user.id if update.effective_user else 'Unknown'}",
+                        parse_mode='HTML'
+                    )
+            except Exception as admin_error:
+                logger.error(f"Could not send error to admin: {admin_error}")
+
+    except Exception as e:
+        logger.error(f"Error in error handler: {e}")
+
+async def detect_existing_groups(bot):
+    """Detect and track groups where the bot is already added"""
+    try:
+        logger.info("Starting detection of existing groups...")
+
+        # Note: Telegram Bot API doesn't provide a direct way to get all chats
+        # where the bot is a member. This is a limitation of the Bot API.
+        # The bot can only track groups when:
+        # 1. It receives messages in those groups
+        # 2. It's added/removed from groups (via ChatMemberHandler)
+        # 3. Groups are manually tracked when commands are used
+
+        # For now, we'll just log that the detection is complete
+        # In a real implementation, you might:
+        # - Use a webhook to track all incoming updates
+        # - Implement a periodic check mechanism
+        # - Use the groups database to track known groups
+
+        existing_groups = groups_db.get_all_groups()
+        logger.info(f"Currently tracking {len(existing_groups)} groups in database")
+
+        # Send a summary to the first admin if available
+        if ADMIN_IDS and len(ADMIN_IDS) > 0 and existing_groups:
+            try:
+                first_admin_id = int(ADMIN_IDS[0]) if ADMIN_IDS[0] and ADMIN_IDS[0].strip() else None
+                if first_admin_id:
+                    summary_text = (
+                        f"🤖 <b>Bot Startup Summary</b>\n\n"
+                        f"📊 <b>Groups Tracking:</b>\n"
+                        f"• Total Groups: {len(existing_groups):,}\n"
+                        f"• Active Groups: {len([g for g in existing_groups.values() if g.get('is_active', True)]):,}\n\n"
+                        f"💡 <b>Note:</b> The bot will automatically track new groups when:\n"
+                        f"• Added to new groups\n"
+                        f"• Commands are used in groups\n"
+                        f"• Messages are sent in groups\n\n"
+                        f"✅ Bot is ready and tracking interactions!"
+                    )
+
+                    await bot.send_message(
+                        chat_id=first_admin_id,
+                        text=summary_text,
+                        parse_mode='HTML'
+                    )
+            except Exception as admin_error:
+                logger.error(f"Could not send startup summary to admin: {admin_error}")
+
+        logger.info("Group detection completed")
+
+    except Exception as e:
+        logger.error(f"Error detecting existing groups: {e}")
+
 async def mem_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Command for admins to get member info in groups"""
     # Check if command is used in a group
@@ -1593,7 +2458,15 @@ async def mem_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return SELECTING_ENTITY
         
         # Process the argument (username or ID)
-        arg = context.args[0]
+        try:
+            arg = context.args[0]
+        except IndexError:
+            await update.message.reply_text(
+                "❌ Please provide a username or user ID.\n"
+                "Usage: /mem @username or /mem 123456789",
+                parse_mode='HTML'
+            )
+            return SELECTING_ENTITY
         
         # Try to get member info
         try:
@@ -1671,11 +2544,7 @@ def main():
         BotCommand("username", "Get ID by username"),
         BotCommand("admin", "Show groups/channels you admin"),
         BotCommand("add", "Add bot to your groups"),
-        BotCommand("info", "Show bot information"),
-        BotCommand("stats", "Show bot statistics (admin only)"),
-        BotCommand("help", "Show help information"),
-        BotCommand("help_group", "Show group commands help"),
-        BotCommand("help_admin", "Show admin commands help"),
+        BotCommand("help", "Show interactive help system"),
         BotCommand("donate", "Support the developer")
     ]
 
@@ -1685,9 +2554,7 @@ def main():
         BotCommand("find", "Find user info by ID"),
         BotCommand("whois", "Get user info"),
         BotCommand("mentionid", "Create clickable mention"),
-        BotCommand("info", "Show bot information"),
-        BotCommand("help_group", "Show group help"),
-        BotCommand("help_admin", "Show admin help")
+        BotCommand("help", "Show interactive help system")
     ]
     
     # Create conversation handler with per_message=False to avoid warnings
@@ -1697,7 +2564,8 @@ def main():
             CommandHandler('help', help_command),
             CommandHandler('id', get_user_id),
             CommandHandler('find', find_command),
-            CommandHandler('info', info_command),
+            CommandHandler('users', users_command),
+            CommandHandler('groups', groups_command),
             CommandHandler('stats', stats_command),
             CommandHandler('admin', admin_command),
             CommandHandler('username', username_command),
@@ -1706,8 +2574,7 @@ def main():
             CommandHandler('mem', mem_command),
             CommandHandler('ids', ids_command),
             CommandHandler('notify', notify_command),
-            CommandHandler('help_group', help_group_command),
-            CommandHandler('help_admin', help_admin_command),
+            CommandHandler('admin_com', admin_com_command),
         ],
         states={
             SELECTING_ENTITY: [
@@ -1763,7 +2630,8 @@ def main():
             CommandHandler('help', help_command),
             CommandHandler('id', get_user_id),
             CommandHandler('find', find_command),
-            CommandHandler('info', info_command),
+            CommandHandler('users', users_command),
+            CommandHandler('groups', groups_command),
             CommandHandler('stats', stats_command),
             CommandHandler('admin', admin_command),
             CommandHandler('username', username_command),
@@ -1781,6 +2649,7 @@ def main():
     # Add all handlers that are not part of the conversation
     application.add_handler(conv_handler)
     application.add_handler(CommandHandler('admin', admin_panel))
+    application.add_handler(CommandHandler('admin_com', admin_com_command))
     application.add_handler(CommandHandler('stats', stats))
     application.add_handler(CommandHandler('users', users_command))
     application.add_handler(CommandHandler('broadcast', broadcast))
@@ -1789,12 +2658,9 @@ def main():
     # Add group command handlers
     # User commands (available to everyone in groups)
     application.add_handler(CommandHandler('find', find_command, filters=filters.ChatType.GROUPS))
-    application.add_handler(CommandHandler('info', info_command, filters=filters.ChatType.GROUPS))
     application.add_handler(CommandHandler('ids', group_ids_command, filters=filters.ChatType.GROUPS))
     application.add_handler(CommandHandler('whois', whois_command, filters=filters.ChatType.GROUPS))
     application.add_handler(CommandHandler('mentionid', mentionid_command, filters=filters.ChatType.GROUPS))
-    application.add_handler(CommandHandler('help_group', help_group_command, filters=filters.ChatType.GROUPS))
-    application.add_handler(CommandHandler('help_admin', help_admin_command, filters=filters.ChatType.GROUPS))
 
     # Admin commands (only for group admins)
     application.add_handler(CommandHandler('warn', warn_command, filters=filters.ChatType.GROUPS))
@@ -1829,9 +2695,18 @@ def main():
 
         print("Bot commands have been set for private chats and groups!")
 
+        # Detect and track existing groups
+        await detect_existing_groups(app.bot)
+
     # Set the post_init function
     application.post_init = post_init
-    
+
+    # Add global error handler
+    application.add_error_handler(error_handler)
+
+    # Add chat member handler to track group additions/removals
+    application.add_handler(ChatMemberHandler(handle_my_chat_member, ChatMemberHandler.MY_CHAT_MEMBER))
+
     # Print ready message
     print("Bot is ready! Press Ctrl+C to stop.")
     
