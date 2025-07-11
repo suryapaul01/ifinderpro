@@ -5,6 +5,142 @@ from config import TON_WALLET
 
 logger = logging.getLogger(__name__)
 
+async def extract_forward_origin_info(forward_origin):
+    """
+    Extract information from forward_origin based on its type.
+    Handles all types: user, channel, chat, hidden_user, and stories.
+    """
+    try:
+        origin_type = forward_origin.type
+        logger.info(f"Processing forward origin type: {origin_type}")
+
+        if origin_type == "user":
+            # Forwarded from a user
+            if hasattr(forward_origin, 'sender_user') and forward_origin.sender_user:
+                user = forward_origin.sender_user
+                entity_type = 'Bot' if user.is_bot else 'User'
+                name = f"{user.first_name or ''} {user.last_name or ''}".strip()
+
+                return {
+                    'type': entity_type,
+                    'id': user.id,
+                    'username': user.username,
+                    'name': name,
+                    'verified': getattr(user, 'is_verified', None),
+                    'forward_date': forward_origin.date.strftime("%Y-%m-%d %H:%M:%S") if forward_origin.date else None
+                }
+
+        elif origin_type == "channel":
+            # Forwarded from a channel
+            if hasattr(forward_origin, 'chat') and forward_origin.chat:
+                chat = forward_origin.chat
+                return {
+                    'type': 'Channel',
+                    'id': chat.id,
+                    'username': chat.username,
+                    'name': chat.title,
+                    'verified': getattr(chat, 'is_verified', None),
+                    'forward_date': forward_origin.date.strftime("%Y-%m-%d %H:%M:%S") if forward_origin.date else None
+                }
+
+        elif origin_type == "chat":
+            # Forwarded from a group/supergroup
+            if hasattr(forward_origin, 'sender_chat') and forward_origin.sender_chat:
+                chat = forward_origin.sender_chat
+                if chat.type == ChatType.CHANNEL:
+                    entity_type = 'Channel'
+                elif chat.type in [ChatType.GROUP, ChatType.SUPERGROUP]:
+                    entity_type = 'Group'
+                else:
+                    entity_type = 'Chat'
+
+                return {
+                    'type': entity_type,
+                    'id': chat.id,
+                    'username': chat.username,
+                    'name': chat.title,
+                    'verified': getattr(chat, 'is_verified', None),
+                    'forward_date': forward_origin.date.strftime("%Y-%m-%d %H:%M:%S") if forward_origin.date else None
+                }
+
+        elif origin_type == "hidden_user":
+            # Forwarded from a user who hid their account
+            if hasattr(forward_origin, 'sender_user_name') and forward_origin.sender_user_name:
+                return {
+                    'type': 'Hidden User',
+                    'id': 'Hidden',
+                    'username': None,
+                    'name': forward_origin.sender_user_name,
+                    'verified': None,
+                    'forward_date': forward_origin.date.strftime("%Y-%m-%d %H:%M:%S") if forward_origin.date else None
+                }
+
+        # Handle stories - this is the key improvement
+        elif origin_type in ['story', 'user_story', 'channel_story'] or hasattr(forward_origin, 'story_id'):
+            logger.info(f"Processing story with origin type: {origin_type}")
+            story_id = getattr(forward_origin, 'story_id', None)
+
+            # Check for channel stories first (sender_chat or chat attribute)
+            if (hasattr(forward_origin, 'sender_chat') and forward_origin.sender_chat and
+                forward_origin.sender_chat is not None):
+                # Story from a channel
+                chat = forward_origin.sender_chat
+                entity_type = 'Channel Story'
+
+                return {
+                    'type': entity_type,
+                    'id': chat.id,
+                    'username': chat.username,
+                    'name': chat.title,
+                    'verified': getattr(chat, 'is_verified', None),
+                    'story_id': story_id,
+                    'forward_date': forward_origin.date.strftime("%Y-%m-%d %H:%M:%S") if forward_origin.date else None
+                }
+
+            elif (hasattr(forward_origin, 'chat') and forward_origin.chat and
+                  forward_origin.chat is not None):
+                # Alternative attribute for channel stories
+                chat = forward_origin.chat
+                entity_type = 'Channel Story'
+
+                return {
+                    'type': entity_type,
+                    'id': chat.id,
+                    'username': chat.username,
+                    'name': chat.title,
+                    'verified': getattr(chat, 'is_verified', None),
+                    'story_id': story_id,
+                    'forward_date': forward_origin.date.strftime("%Y-%m-%d %H:%M:%S") if forward_origin.date else None
+                }
+
+            elif (hasattr(forward_origin, 'sender_user') and forward_origin.sender_user and
+                  forward_origin.sender_user is not None):
+                # Story from a user
+                user = forward_origin.sender_user
+                entity_type = 'User Story'
+                name = f"{user.first_name or ''} {user.last_name or ''}".strip()
+
+                return {
+                    'type': entity_type,
+                    'id': user.id,
+                    'username': user.username,
+                    'name': name,
+                    'verified': getattr(user, 'is_verified', None),
+                    'story_id': story_id,
+                    'forward_date': forward_origin.date.strftime("%Y-%m-%d %H:%M:%S") if forward_origin.date else None
+                }
+
+        # If we get here, log what we found for debugging
+        logger.warning(f"Unhandled forward origin type: {origin_type}")
+        logger.warning(f"Available attributes: {dir(forward_origin)}")
+        return None
+
+    except Exception as e:
+        logger.error(f"Error extracting forward origin info: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return None
+
 async def extract_entity_info(message: Message):
     """
     Extracts entity info from a forwarded message or chat/user object.
@@ -16,146 +152,14 @@ async def extract_entity_info(message: Message):
         # Handle the new forward_origin attribute (Bot API 7.0+)
         if hasattr(message, 'forward_origin') and message.forward_origin:
             logger.info(f"Found forward_origin: {message.forward_origin}")
+            logger.info(f"Forward origin type: {message.forward_origin.type}")
             logger.info(f"Forward origin attributes: {dir(message.forward_origin)}")
-            origin_type = message.forward_origin.type
-            
-            if origin_type == 'user':
-                if hasattr(message.forward_origin, 'sender_user'):
-                    user_origin = message.forward_origin.sender_user
-                    entity_type = 'User' if not user_origin.is_bot else 'Bot'
-                    name = f"{user_origin.first_name or ''} {user_origin.last_name or ''}".strip()
-                    username = user_origin.username
-                    verified = None
-                    entity_id = user_origin.id
-                    
-                    return {
-                        'type': entity_type,
-                        'id': entity_id,
-                        'username': username,
-                        'name': name,
-                        'verified': verified
-                    }
-                    
-            elif origin_type == 'chat':
-                if hasattr(message.forward_origin, 'sender_chat'):
-                    chat_origin = message.forward_origin.sender_chat
-                    if chat_origin.type == ChatType.CHANNEL:
-                        entity_type = 'Channel'
-                    elif chat_origin.type == ChatType.GROUP:
-                        entity_type = 'Group'
-                    elif chat_origin.type == ChatType.SUPERGROUP:
-                        entity_type = 'Group'
-                    else:
-                        entity_type = 'Unknown'
-                    name = chat_origin.title
-                    username = chat_origin.username
-                    verified = getattr(chat_origin, 'is_verified', None)
-                    entity_id = chat_origin.id
-                    
-                    return {
-                        'type': entity_type,
-                        'id': entity_id,
-                        'username': username,
-                        'name': name,
-                        'verified': verified
-                    }
-            
-            # Handle story origin - check multiple possible origin types
-            elif origin_type in ['story', 'user_story', 'channel_story']:
-                logger.info(f"Processing story with origin type: {origin_type}")
 
-                # Try to get story information from different possible attributes
-                story_id = getattr(message.forward_origin, 'story_id', None)
-                logger.info(f"Story ID: {story_id}")
+            return await extract_forward_origin_info(message.forward_origin)
 
-                if hasattr(message.forward_origin, 'sender_user'):
-                    # Story from a user
-                    user_origin = message.forward_origin.sender_user
-                    entity_type = 'User Story'
-                    name = f"{user_origin.first_name or ''} {user_origin.last_name or ''}".strip()
-                    username = user_origin.username
-                    verified = getattr(user_origin, 'is_verified', None)
-                    entity_id = user_origin.id
+        # If forward_origin extraction failed, try fallback methods
+        logger.info("Forward origin extraction failed, trying fallback methods...")
 
-                    logger.info(f"User story detected: ID={entity_id}, Name={name}, Username={username}")
-
-                    return {
-                        'type': entity_type,
-                        'id': entity_id,
-                        'username': username,
-                        'name': name,
-                        'verified': verified,
-                        'story_id': story_id
-                    }
-                elif hasattr(message.forward_origin, 'sender_chat'):
-                    # Story from a channel
-                    chat_origin = message.forward_origin.sender_chat
-                    entity_type = 'Channel Story'
-                    name = chat_origin.title
-                    username = chat_origin.username
-                    verified = getattr(chat_origin, 'is_verified', None)
-                    entity_id = chat_origin.id
-
-                    logger.info(f"Channel story detected: ID={entity_id}, Name={name}, Username={username}")
-
-                    return {
-                        'type': entity_type,
-                        'id': entity_id,
-                        'username': username,
-                        'name': name,
-                        'verified': verified,
-                        'story_id': story_id
-                    }
-                elif hasattr(message.forward_origin, 'chat'):
-                    # Alternative attribute name for chat
-                    chat_origin = message.forward_origin.chat
-                    entity_type = 'Channel Story'
-                    name = chat_origin.title
-                    username = chat_origin.username
-                    verified = getattr(chat_origin, 'is_verified', None)
-                    entity_id = chat_origin.id
-
-                    logger.info(f"Channel story (alt) detected: ID={entity_id}, Name={name}, Username={username}")
-
-                    return {
-                        'type': entity_type,
-                        'id': entity_id,
-                        'username': username,
-                        'name': name,
-                        'verified': verified,
-                        'story_id': story_id
-                    }
-                else:
-                    logger.warning(f"Story origin found but no sender information available. Attributes: {dir(message.forward_origin)}")
-                    return None
-                    
-            elif origin_type == 'hidden_user':
-                # Handle hidden user origin
-                if hasattr(message.forward_origin, 'sender_user_name'):
-                    return {
-                        'type': 'Hidden User',
-                        'id': 'Hidden',
-                        'username': None,
-                        'name': message.forward_origin.sender_user_name,
-                        'verified': None
-                    }
-                    
-            elif origin_type == 'channel':
-                # Handle channel origin
-                if hasattr(message.forward_origin, 'chat'):
-                    chat = message.forward_origin.chat
-                    return {
-                        'type': 'Channel',
-                        'id': chat.id,
-                        'username': chat.username,
-                        'name': chat.title,
-                        'verified': getattr(chat, 'is_verified', None)
-                    }
-                    
-            # Log the forward_origin for debugging
-            logger.info(f"Forward origin type: {origin_type}")
-            logger.info(f"Forward origin attributes: {dir(message.forward_origin)}")
-                
         # Fallback for older versions (deprecated, but kept for compatibility)
         logger.info("Checking for legacy forward attributes...")
 
@@ -261,6 +265,13 @@ def format_entity_response(info: dict) -> str:
         lines.append(f"✅ <b>Verified:</b> {'Yes' if info['verified'] else 'No'}")
     if info.get('story_id') is not None:
         lines.append(f"📱 <b>Story ID:</b> <code>{info['story_id']}</code>")
+    if info.get('forward_date'):
+        lines.append(f"📅 <b>Forward Date:</b> {info['forward_date']}")
+
+    # Add special note for stories
+    if 'Story' in info.get('type', ''):
+        lines.append(f"\n💡 <b>Note:</b> This information was extracted from a forwarded story.")
+
     return '\n'.join(lines)
 
 async def resolve_username_or_link(app, text: str):

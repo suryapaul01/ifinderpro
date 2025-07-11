@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 # Conversation states
 SELECTING_ENTITY, SELECTING_CHAT, SELECTING_DONATION_METHOD, SELECTING_STARS_AMOUNT, SELECTING_TON_AMOUNT, WAITING_FOR_USERNAME, WAITING_FOR_MEMBER_USERNAME, NOTIFY_TEXT, NOTIFY_BUTTONS, NOTIFY_CONFIRM = range(10)
 
-# Main keyboard with entity buttons and donate button - always visible
+# Main keyboard with entity buttons and donate button - for private chats only
 MAIN_KEYBOARD = ReplyKeyboardMarkup([
     [
         KeyboardButton(
@@ -61,6 +61,14 @@ MAIN_KEYBOARD = ReplyKeyboardMarkup([
         )
     ],
     [KeyboardButton(text="💰 Donate")]
+], resize_keyboard=True)
+
+# Group keyboard without user/bot request buttons (for group chats)
+GROUP_KEYBOARD = ReplyKeyboardMarkup([
+    [
+        KeyboardButton(text="ℹ️ Help"),
+        KeyboardButton(text="🆔 My ID")
+    ]
 ], resize_keyboard=True)
 
 # Admin keyboard with only group and channel buttons
@@ -161,6 +169,7 @@ TON_KEYBOARD = InlineKeyboardMarkup([
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     user_name = user.first_name
+    chat_type = update.effective_chat.type
 
     # Clear any notification in progress
     if 'notification' in context.user_data:
@@ -169,39 +178,54 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Track interaction
     track_interaction(update)
 
-    welcome_text = (
-        f"👋 <b>Welcome to ID Finder Pro Bot, {user_name}!</b>\n\n"
+    # Different welcome messages for private vs group chats
+    if chat_type == 'private':
+        welcome_text = (
+            f"👋 <b>Welcome to ID Finder Pro Bot, {user_name}!</b>\n\n"
 
-        f"🔍 <b>What I Can Do:</b>\n"
-        f"• Find Telegram IDs of users, groups, channels & bots\n"
-        f"• Extract IDs from forwarded messages & stories\n"
-        f"• Provide detailed entity information\n"
-        f"• Manage groups with advanced admin tools\n"
-        f"• Track user interactions and analytics\n\n"
+            f"🔍 <b>What I Can Do:</b>\n"
+            f"• Find Telegram IDs of users, groups, channels & bots\n"
+            f"• Extract IDs from forwarded messages & stories\n"
+            f"• Provide detailed entity information\n"
+            f"• Manage groups with advanced admin tools\n"
+            f"• Track user interactions and analytics\n\n"
 
-        f"🚀 <b>Quick Start:</b>\n"
-        f"• <b>Forward any message</b> to get sender's ID\n"
-        f"• <b>Forward stories</b> to get user/channel ID\n"
-        f"• Use <b>buttons below</b> to share contacts\n"
-        f"• Type <b>/id</b> to get your own ID\n"
-        f"• Type <b>/help</b> for help system\n\n"
+            f"🚀 <b>Quick Start:</b>\n"
+            f"• <b>Forward any message</b> to get sender's ID\n"
+            f"• <b>Forward stories</b> to get user/channel ID\n"
+            f"• Use <b>buttons below</b> to share contacts\n"
+            f"• Type <b>/id</b> to get your own ID\n"
+            f"• Type <b>/help</b> for help system\n\n"
 
-        f"🛡️ <b>Group Features:</b>\n"
-        f"Add me to your groups for:\n"
-        f"• User identification commands\n"
-        f"• Warning & mute systems\n"
-        f"• Admin management tools\n"
-        f"• Group statistics tracking\n\n"
+            f"🛡️ <b>Group Features:</b>\n"
+            f"Add me to your groups for:\n"
+            f"• User identification commands\n"
+            f"• Warning & mute systems\n"
+            f"• Admin management tools\n"
+            f"• Group statistics tracking\n\n"
 
-        f"📣 <b>Official Channel:</b> @idfinderpro <b>subscribe For Updates</b>\n"
+            f"📣 <b>Official Channel:</b> @idfinderpro <b>subscribe For Updates</b>\n"
 
-        f"<i>Select an option below to get started!</i>"
-    )
+            f"<i>Select an option below to get started!</i>"
+        )
+    else:
+        # Group chat welcome message
+        welcome_text = (
+            f"👋 <b>Hello {user_name}!</b>\n\n"
+            f"🔍 <b>ID Finder Pro Bot is now active in this group!</b>\n\n"
+            f"🚀 <b>Available Commands:</b>\n"
+            f"• <b>/id</b> - Get your own ID\n"
+            f"• <b>/ids</b> - Get all member IDs (admin only)\n"
+            f"• <b>/whois</b> - Get user info\n"
+            f"• <b>/help</b> - Show help system\n\n"
+            f"💡 <b>Tip:</b> Forward messages to get sender IDs!\n"
+            f"📣 <b>Channel:</b> @idfinderpro"
+        )
 
     await update.message.reply_text(
         welcome_text,
         parse_mode='HTML',
-        reply_markup=MAIN_KEYBOARD
+        reply_markup=get_appropriate_keyboard(chat_type)
     )
 
     return SELECTING_ENTITY
@@ -658,8 +682,13 @@ async def username_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_username_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle username input after /username command"""
+    # Add null check for message
+    if not update.message or not update.message.text:
+        logger.error("handle_username_input called with None message or text")
+        return SELECTING_ENTITY
+
     username = update.message.text.strip()
-    
+
     # Check if it's a back button press
     if username == "🔙 Back to Main":
         await update.message.reply_text(
@@ -702,6 +731,15 @@ async def handle_username_input(update: Update, context: ContextTypes.DEFAULT_TY
     return SELECTING_ENTITY
 
 async def get_user_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Add null checks
+    if not update.effective_user:
+        logger.error("get_user_id called with None user")
+        return SELECTING_ENTITY
+
+    if not update.effective_chat:
+        logger.error("get_user_id called with None chat")
+        return SELECTING_ENTITY
+
     # Track interaction
     track_interaction(update)
 
@@ -720,15 +758,21 @@ async def get_user_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if user.username:
             text += f"\n📎 <b>Username:</b> @{user.username}"
 
-        # Always keep the main keyboard visible
-        await update.message.reply_text(text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
+        # Use appropriate keyboard based on chat type
+        await update.message.reply_text(text, parse_mode='HTML', reply_markup=get_appropriate_keyboard(chat_type))
         return SELECTING_ENTITY
     else:
         # Group chat - use group format (delegate to group command)
         await group_id_command(update, context)
 
 async def handle_user_shared(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info("=== handle_user_shared ENTRY ===")
     try:
+        # Add null check for message
+        if not update.message:
+            logger.error("handle_user_shared called with None message")
+            return SELECTING_ENTITY
+
         # Debug: Log message attributes
         logger.info(f"Message attributes: {[attr for attr in dir(update.message) if 'shared' in attr.lower()]}")
 
@@ -767,7 +811,8 @@ async def handle_user_shared(update: Update, context: ContextTypes.DEFAULT_TYPE)
         if not user_id:
             logger.error("Could not extract user ID from shared user data")
             logger.error(f"Available message attributes: {[attr for attr in dir(update.message) if not attr.startswith('_')]}")
-            await update.message.reply_text("Error: No user was shared.", reply_markup=MAIN_KEYBOARD)
+            chat_type = update.effective_chat.type
+            await update.message.reply_text("Error: No user was shared.", reply_markup=get_appropriate_keyboard(chat_type))
             return SELECTING_ENTITY
 
         logger.info(f"Successfully extracted user ID: {user_id}")
@@ -785,9 +830,10 @@ async def handle_user_shared(update: Update, context: ContextTypes.DEFAULT_TYPE)
             
             if hasattr(user, 'username') and user.username:
                 text += f"\n📎 <b>Username:</b> @{user.username}"
-            
-            # Always keep the main keyboard visible
-            await update.message.reply_text(text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
+
+            # Use appropriate keyboard based on chat type
+            chat_type = update.effective_chat.type
+            await update.message.reply_text(text, parse_mode='HTML', reply_markup=get_appropriate_keyboard(chat_type))
             
         except Exception as e:
             # If we can't get the chat, just use the user_id from user_shared
@@ -799,20 +845,36 @@ async def handle_user_shared(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 f"🆔 <b>ID:</b> <code>{user_id}</code>\n\n"
                 f"<i>Note: Limited information available for this user.</i>"
             )
-            await update.message.reply_text(text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
-        
+            chat_type = update.effective_chat.type
+            await update.message.reply_text(text, parse_mode='HTML', reply_markup=get_appropriate_keyboard(chat_type))
+
     except Exception as e:
         logger.error(f"Error in handle_user_shared: {e}")
-        await update.message.reply_text(f"❌ Error: Could not retrieve user information.", reply_markup=MAIN_KEYBOARD)
-    
+        logger.error(f"Exception type: {type(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+
+        # Safe error response
+        if update.message:
+            chat_type = update.effective_chat.type if update.effective_chat else 'private'
+            await update.message.reply_text(f"❌ Error: Could not retrieve user information.", reply_markup=get_appropriate_keyboard(chat_type))
+
+    logger.info("=== handle_user_shared EXIT ===")
     return SELECTING_ENTITY
 
 async def handle_chat_shared(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info("=== handle_chat_shared ENTRY ===")
     try:
+        # Add null check for message
+        if not update.message:
+            logger.error("handle_chat_shared called with None message")
+            return SELECTING_ENTITY
+
         # Extract the shared chat information
         chat_shared = update.message.chat_shared
         if not chat_shared:
-            await update.message.reply_text("Error: No chat was shared.", reply_markup=MAIN_KEYBOARD)
+            chat_type = update.effective_chat.type
+            await update.message.reply_text("Error: No chat was shared.", reply_markup=get_appropriate_keyboard(chat_type))
             return SELECTING_ENTITY
         
         chat_id = chat_shared.chat_id
@@ -876,8 +938,8 @@ async def handle_chat_shared(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 )
                 return SELECTING_ENTITY
             else:
-                keyboard = MAIN_KEYBOARD
-            
+                keyboard = get_appropriate_keyboard(update.effective_chat.type)
+
             # Send the response with the appropriate keyboard
             await update.message.reply_text(text, parse_mode='HTML', reply_markup=keyboard)
             
@@ -921,14 +983,22 @@ async def handle_chat_shared(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 )
                 return SELECTING_ENTITY
             else:
-                keyboard = MAIN_KEYBOARD
-                
+                keyboard = get_appropriate_keyboard(update.effective_chat.type)
+
             await update.message.reply_text(text, parse_mode='HTML', reply_markup=keyboard)
-        
+
     except Exception as e:
         logger.error(f"Error in handle_chat_shared: {e}")
-        await update.message.reply_text(f"❌ Error: Could not retrieve chat information.", reply_markup=MAIN_KEYBOARD)
-    
+        logger.error(f"Exception type: {type(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+
+        # Safe error response
+        if update.message:
+            chat_type = update.effective_chat.type if update.effective_chat else 'private'
+            await update.message.reply_text(f"❌ Error: Could not retrieve chat information.", reply_markup=get_appropriate_keyboard(chat_type))
+
+    logger.info("=== handle_chat_shared EXIT ===")
     return SELECTING_ENTITY
 
 async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1091,6 +1161,45 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     return SELECTING_ENTITY
 
+def get_appropriate_keyboard(chat_type: str):
+    """Get the appropriate keyboard based on chat type"""
+    if chat_type == 'private':
+        return MAIN_KEYBOARD
+    else:
+        # For groups, supergroups, and channels - use keyboard without user request buttons
+        return GROUP_KEYBOARD
+
+async def safe_reply_text(update: Update, text: str, parse_mode: str = None, reply_markup=None):
+    """Safely send a reply text message with proper error handling"""
+    try:
+        if not update:
+            logger.error("safe_reply_text: update is None")
+            return False
+
+        # Try to use message first
+        if update.message:
+            await update.message.reply_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
+            return True
+
+        # If no message, try callback query
+        if update.callback_query:
+            await update.callback_query.message.reply_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
+            return True
+
+        # If neither, try to send directly to chat
+        if update.effective_chat:
+            from telegram.ext import ContextTypes
+            # This would need context, so we'll log the error instead
+            logger.error(f"safe_reply_text: No message or callback_query available for chat {update.effective_chat.id}")
+            return False
+
+        logger.error("safe_reply_text: No way to send message - no message, callback_query, or effective_chat")
+        return False
+
+    except Exception as e:
+        logger.error(f"safe_reply_text error: {e}")
+        return False
+
 def track_interaction(update: Update):
     """Helper function to track user and group interactions"""
     try:
@@ -1119,6 +1228,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
     user = update.effective_user
     chat = update.effective_chat
+
+    # Add null checks for critical objects
+    if not message:
+        logger.error("handle_message called with None message")
+        return SELECTING_ENTITY
+
+    if not user:
+        logger.error("handle_message called with None user")
+        return SELECTING_ENTITY
+
+    if not chat:
+        logger.error("handle_message called with None chat")
+        return SELECTING_ENTITY
+
     user_id = str(user.id)
 
     logger.info(f"handle_message called by user {user_id}")
@@ -1149,7 +1272,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Check if the message is "🔙 Back to Main"
     if message.text == "🔙 Back to Main":
-        await message.reply_text("Returning to main menu.", reply_markup=MAIN_KEYBOARD)
+        await message.reply_text("Returning to main menu.", reply_markup=get_appropriate_keyboard(chat.type))
         return SELECTING_ENTITY
 
     # Handle forwarded messages
@@ -1162,22 +1285,28 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if info:
                 logger.info(f"Successfully extracted info: {info}")
                 text = format_entity_response(info)
-                # Always keep the main keyboard visible
-                await message.reply_text(text, parse_mode='HTML', reply_markup=MAIN_KEYBOARD)
+                # Use appropriate keyboard based on chat type
+                await message.reply_text(text, parse_mode='HTML', reply_markup=get_appropriate_keyboard(chat.type))
             else:
                 logger.warning("Could not extract entity info from forwarded message")
-                await message.reply_text("❌ Could not extract entity info from this forwarded message.", reply_markup=MAIN_KEYBOARD)
+                await message.reply_text("❌ Could not extract entity info from this forwarded message.", reply_markup=get_appropriate_keyboard(chat.type))
         except Exception as e:
             logger.error(f"Error extracting entity info: {e}")
-            await message.reply_text("❌ An error occurred while processing the forwarded message.", reply_markup=MAIN_KEYBOARD)
+            await message.reply_text("❌ An error occurred while processing the forwarded message.", reply_markup=get_appropriate_keyboard(chat.type))
         return SELECTING_ENTITY
 
-    # For all other messages, show a helpful message with the main keyboard
-    await message.reply_text(
-        "Please forward a message from a user, channel, group, or bot to get its ID.\n\n"
-        "You can also use the /id command to get your own ID or use the buttons below.",
-        reply_markup=MAIN_KEYBOARD
-    )
+    # For all other messages, show a helpful message with appropriate keyboard
+    if chat.type == 'private':
+        help_text = (
+            "Please forward a message from a user, channel, group, or bot to get its ID.\n\n"
+            "You can also use the /id command to get your own ID or use the buttons below."
+        )
+    else:
+        help_text = (
+            "Please forward a message to get the sender's ID, or use available commands like /id or /help."
+        )
+
+    await message.reply_text(help_text, reply_markup=get_appropriate_keyboard(chat.type))
     return SELECTING_ENTITY
 
 async def inline_query_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1752,9 +1881,15 @@ async def handle_pre_checkout_query(update: Update, context: ContextTypes.DEFAUL
 
 async def handle_successful_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Confirm the successful payment"""
+    # Add null checks
+    if not update.message or not update.message.successful_payment:
+        logger.error("handle_successful_payment called with invalid payment info")
+        return SELECTING_ENTITY
+
     payment_info = update.message.successful_payment
     amount = payment_info.total_amount  # No need to divide by 100 since we're using direct amount
-    user_name = update.effective_user.first_name
+    user_name = update.effective_user.first_name if update.effective_user else "Friend"
+    chat_type = update.effective_chat.type if update.effective_chat else 'private'
 
     # Sweet donation success message
     await update.message.reply_text(
@@ -1767,10 +1902,14 @@ async def handle_successful_payment(update: Update, context: ContextTypes.DEFAUL
         f"• Support our development team\n\n"
         f"🌟 You're now part of our amazing supporter community! We're incredibly grateful for your kindness and support.\n\n"
         f"💝 <b>With heartfelt thanks,</b>\n"
-        f"The ID Finder Pro Team ❤️",
+        f"The ID Finder Pro Team ❤️\n\n"
+        f"🏠 <b>You're back to the main menu - ready to find more IDs!</b>",
         parse_mode='HTML',
-        reply_markup=MAIN_KEYBOARD
+        reply_markup=get_appropriate_keyboard(chat_type)
     )
+
+    # Return to main entity selection state
+    return SELECTING_ENTITY
 
 async def admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
@@ -1889,12 +2028,17 @@ async def handle_notify_text(update: Update, context: ContextTypes.DEFAULT_TYPE)
         message = update.message
         logger.info(f"handle_notify_text called with message type: {type(message)}")
 
+        # Add null check for message
+        if not message:
+            logger.error("handle_notify_text called with None message")
+            return SELECTING_ENTITY
+
         # Ensure notification data exists
         if 'notification' not in context.user_data:
             logger.error("Notification data not found in context.user_data")
             await message.reply_text(
                 "❌ Session expired. Please use /notify to start again.",
-                reply_markup=MAIN_KEYBOARD
+                reply_markup=get_appropriate_keyboard(update.effective_chat.type if update.effective_chat else 'private')
             )
             return SELECTING_ENTITY
 
@@ -1990,16 +2134,23 @@ async def handle_notify_text(update: Update, context: ContextTypes.DEFAULT_TYPE)
         import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
 
-        await message.reply_text(
-            "❌ An error occurred while processing your content. Please try again or use /start to restart.",
-            reply_markup=MAIN_KEYBOARD
-        )
+        # Add null check before reply_text
+        if message:
+            await message.reply_text(
+                "❌ An error occurred while processing your content. Please try again or use /start to restart.",
+                reply_markup=get_appropriate_keyboard(update.effective_chat.type if update.effective_chat else 'private')
+            )
         return SELECTING_ENTITY
 
 
 
 async def handle_notify_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle button input for notification"""
+    # Add null check for message
+    if not update.message or not update.message.text:
+        logger.error("handle_notify_buttons called with None message or text")
+        return NOTIFY_BUTTONS
+
     text = update.message.text
 
     # Parse button format: "Button Text | https://example.com"
@@ -2322,7 +2473,33 @@ async def handle_my_chat_member(update: Update, context: ContextTypes.DEFAULT_TY
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     """Global error handler"""
     try:
+        logger.error("=" * 50)
+        logger.error("🚨 GLOBAL ERROR HANDLER TRIGGERED")
         logger.error(f"Exception while handling an update: {context.error}")
+        logger.error(f"Exception type: {type(context.error)}")
+
+        # Log full traceback for debugging
+        import traceback
+        logger.error(f"Full traceback:\n{traceback.format_exc()}")
+
+        # Log more details about the update for debugging
+        if update:
+            logger.error(f"Update type: {type(update)}")
+            if hasattr(update, 'effective_chat'):
+                logger.error(f"Chat ID: {update.effective_chat.id if update.effective_chat else 'None'}")
+                logger.error(f"Chat type: {update.effective_chat.type if update.effective_chat else 'None'}")
+            if hasattr(update, 'effective_user'):
+                logger.error(f"User ID: {update.effective_user.id if update.effective_user else 'None'}")
+            if hasattr(update, 'message'):
+                logger.error(f"Message exists: {update.message is not None}")
+                if update.message:
+                    logger.error(f"Message text: {getattr(update.message, 'text', 'No text')}")
+            if hasattr(update, 'callback_query'):
+                logger.error(f"Callback query exists: {update.callback_query is not None}")
+                if update.callback_query:
+                    logger.error(f"Callback data: {getattr(update.callback_query, 'data', 'No data')}")
+        else:
+            logger.error("Update is None or not available")
 
         # Try to send error message to admin
         if update and hasattr(update, 'effective_chat') and update.effective_chat and ADMIN_IDS and len(ADMIN_IDS) > 0:
@@ -2330,19 +2507,31 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
                 # Convert first admin ID to int if it's a string
                 first_admin_id = int(ADMIN_IDS[0]) if ADMIN_IDS[0] and ADMIN_IDS[0].strip() else None
                 if first_admin_id:
+                    # Get error details safely
+                    error_str = str(context.error)
+                    chat_id = update.effective_chat.id if update.effective_chat else 'Unknown'
+                    user_id = update.effective_user.id if update.effective_user else 'Unknown'
+
                     await context.bot.send_message(
                         chat_id=first_admin_id,
                         text=f"🚨 <b>Bot Error</b>\n\n"
-                             f"Error: <code>{str(context.error)}</code>\n"
-                             f"Chat ID: {update.effective_chat.id}\n"
-                             f"User ID: {update.effective_user.id if update.effective_user else 'Unknown'}",
+                             f"Error: <code>{error_str}</code>\n"
+                             f"Chat ID: {chat_id}\n"
+                             f"User ID: {user_id}",
                         parse_mode='HTML'
                     )
             except Exception as admin_error:
                 logger.error(f"Could not send error to admin: {admin_error}")
+        else:
+            logger.error("Cannot send error to admin - missing update info or admin IDs")
+
+        logger.error("=" * 50)
 
     except Exception as e:
         logger.error(f"Error in error handler: {e}")
+        logger.error(f"Error handler exception type: {type(e)}")
+        import traceback
+        logger.error(f"Error handler traceback:\n{traceback.format_exc()}")
 
 async def detect_existing_groups(bot):
     """Detect and track groups where the bot is already added"""
@@ -2558,6 +2747,7 @@ def main():
         states={
             SELECTING_ENTITY: [
                 CallbackQueryHandler(menu_callback),
+                MessageHandler(filters.SUCCESSFUL_PAYMENT, handle_successful_payment),
                 MessageHandler(filters.StatusUpdate.USERS_SHARED, handle_user_shared),
                 MessageHandler(filters.StatusUpdate.CHAT_SHARED, handle_chat_shared),
                 MessageHandler(filters.ALL & ~filters.COMMAND, handle_message),
@@ -2570,18 +2760,21 @@ def main():
             ],
             SELECTING_DONATION_METHOD: [
                 CallbackQueryHandler(menu_callback),
+                MessageHandler(filters.SUCCESSFUL_PAYMENT, handle_successful_payment),
                 MessageHandler(filters.StatusUpdate.USERS_SHARED, handle_user_shared_from_other_screen),
                 MessageHandler(filters.StatusUpdate.CHAT_SHARED, handle_chat_shared_from_other_screen),
                 MessageHandler(filters.ALL & ~filters.COMMAND, handle_message_from_other_screen),
             ],
             SELECTING_STARS_AMOUNT: [
                 CallbackQueryHandler(menu_callback),
+                MessageHandler(filters.SUCCESSFUL_PAYMENT, handle_successful_payment),
                 MessageHandler(filters.StatusUpdate.USERS_SHARED, handle_user_shared_from_other_screen),
                 MessageHandler(filters.StatusUpdate.CHAT_SHARED, handle_chat_shared_from_other_screen),
                 MessageHandler(filters.ALL & ~filters.COMMAND, handle_message_from_other_screen),
             ],
             SELECTING_TON_AMOUNT: [
                 CallbackQueryHandler(menu_callback),
+                MessageHandler(filters.SUCCESSFUL_PAYMENT, handle_successful_payment),
                 MessageHandler(filters.StatusUpdate.USERS_SHARED, handle_user_shared_from_other_screen),
                 MessageHandler(filters.StatusUpdate.CHAT_SHARED, handle_chat_shared_from_other_screen),
                 MessageHandler(filters.ALL & ~filters.COMMAND, handle_message_from_other_screen),
