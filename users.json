@@ -5,8 +5,8 @@
     "first_name": "Surya",
     "last_name": "paul",
     "joined_date": "2025-07-04T23:06:37.535400",
-    "last_seen": "2025-07-11T15:49:37.180085",
-    "interaction_count": 58
+    "last_seen": "2025-07-15T12:22:55.859611",
+    "interaction_count": 67
   },
   "1087968824": {
     "user_id": 1087968824,
@@ -140,8 +140,8 @@
     "first_name": "Flutter",
     "last_name": null,
     "joined_date": "2025-07-07T02:02:07.412255",
-    "last_seen": "2025-07-07T02:02:07.412255",
-    "interaction_count": 1
+    "last_seen": "2025-07-14T23:11:49.340266",
+    "interaction_count": 3
   },
   "7744471877": {
     "user_id": 7744471877,
@@ -601,5 +601,617 @@
     "joined_date": "2025-07-11T09:49:52.915227",
     "last_seen": "2025-07-11T09:50:20.651536",
     "interaction_count": 3
+  },
+  "5120021500": {
+    "user_id": 5120021500,
+    "username": "Mahamedkhlil1",
+    "first_name": "Mohamed",
+    "last_name": "Khlil",
+    "joined_date": "2025-07-11T14:57:43.895778",
+    "last_seen": "2025-07-11T14:59:25.130709",
+    "interaction_count": 2
+  },
+  "7799102542": {
+    "user_id": 7799102542,
+    "username": "isokun1",
+    "first_name": "Isokun Jeremiah",
+    "last_name": null,
+    "joined_date": "2025-07-11T15:59:45.941816",
+    "last_seen": "2025-07-11T16:00:39.795294",
+    "interaction_count": 4
+  },
+  "2114296269": {
+    "user_id": 2114296269,
+    "username": "Mr_malik134",
+    "first_name": "Mr",
+    "last_name": "Malik134",
+    "joined_date": "2025-07-11T17:49:15.847449",
+    "last_seen": "2025-07-11T17:51:32.917571",
+    "interaction_count": 3
+  },
+  "5717581867": {
+    "user_id": 5717581867,
+    "username": null,
+    "first_name": "Kevin",
+    "last_name": null,
+    "joined_date": "2025-07-11T19:25:33.873933",
+    "last_seen": "2025-07-11T19:25:33.873933",
+    "interaction_count": 1
+  },
+  "7138830664": {
+    "user_id": 7138830664,
+    "username": "ishaangarg776",
+    "first_name": "Ishaan",
+    "last_name": "Garg",
+    "joined_date": "2025-07-11T19:33:13.521583",
+    "last_seen": "2025-07-11T19:33:13.521583",
+    "interaction_count": 1
+  },
+  "8177252573": {
+    "user_id": 8177252573,
+    "username": null,
+    "first_name": "x",
+    "last_name": null,
+    "joined_date": "2025-07-11T19:35:57.684547",
+    "last_seen": "2025-07-11T19:35:57.684547",
+    "interaction_count": 1
+  },
+  "5426318206": {
+    "user_id": 5426318206,
+    "username": "floraws",
+    "first_name": "flóws ` smile",
+    "last_name": null,
+    "joined_date": "2025-07-11T20:37:26.329578",
+    "last_seen": "2025-07-12T22:42:52.044938",
+    "interaction_count": 8
+  },
+  "7530285705": {
+    "user_id": 7530285705,
+    "username": "Jayyyyyy02",
+    "first_name": "Vijay",
+    "last_name": "PATIL",
+    "joined_date": "2025-07-11T21:57:23.157998",
+    "last_seen": "2025-07-11T21:57:58.409858",
+    "interaction_count": 2
+  },
+  "7355741976": {
+    "user_id": 7355741976,
+    "username": null,
+    "first_name": "Daniel",
+    "last_name": null,
+    "joined_date": "2025-07-11T23:10:46.378200",
+    "last_seen": "2025-07-11T23:11:19.584660",
+    "interaction_count": 3
+  },
+  "1100344301": {
+    "user_id": 1100344301,
+    "username": "dinesks",
+    "first_name": "Dinesh Kumar Sahoo",
+    "last_name": null,
+    "joined_date": "2025-07-12T01:11:37.251136",
+    "last_seen": "2025-07-12T01:11:41.678013",
+    "interaction_count": 2
+  },
+  "6244533857": {
+    "user_id": 6244533857,
+    "username": null,
+    "first_name": "no",
+    "last_name": "yam",
+    "joined_date": "2025-07-12T01:19:23.292474",
+    "last_seen": "2025-07-12T01:19:38.633404",
+    "interaction_count": 2
+  },
+  "6757760087": {
+    "user_id": 6757760087,
+    "username": "JakkoPe",
+    "first_name": "Jakkob",
+    "last_name": "Julio",
+    "joined_date": "2025-07-12T01:52:57.935585",
+    "last_seen": "2025-07-16T01:30:27.735572",
+    "interaction_count": 3
+  },
+  "8049357874": {
+    "user_id": 8049357874,
+    "username": null,
+    "first_name": "iqbal",
+    "last_name": null,
+    "joined_date": "2025-07-12T02:24:30.865013",
+    "last_seen": "2025-07-12T02:24:30.865013",
+    "interaction_count": 1
+  },
+  "6674155783": {
+    "user_id": 6674155783,
+    "username": "SEANY_MCC",
+    "first_name": "Sean",
+    "last_name": "Mc caffrey",
+    "joined_date": "2025-07-12T02:55:03.783967",
+    "last_seen": "2025-07-12T02:55:03.783967",
+    "interaction_count": 1
+  },
+  "6003553527": {
+    "user_id": 6003553527,
+    "username": "Ozodbek_s",
+    "first_name": "Ozodbek",
+    "last_name": "Toshmuradov",
+    "joined_date": "2025-07-12T06:12:56.742355",
+    "last_seen": "2025-07-12T06:13:16.409677",
+    "interaction_count": 4
+  },
+  "1110595987": {
+    "user_id": 1110595987,
+    "username": null,
+    "first_name": "Birat",
+    "last_name": "Paul",
+    "joined_date": "2025-07-12T08:09:23.210697",
+    "last_seen": "2025-07-12T08:10:16.690154",
+    "interaction_count": 3
+  },
+  "6288934257": {
+    "user_id": 6288934257,
+    "username": null,
+    "first_name": "Na",
+    "last_name": "Sa",
+    "joined_date": "2025-07-12T11:10:34.216755",
+    "last_seen": "2025-07-12T11:10:34.216755",
+    "interaction_count": 1
+  },
+  "8076575036": {
+    "user_id": 8076575036,
+    "username": null,
+    "first_name": "Javohir",
+    "last_name": null,
+    "joined_date": "2025-07-12T11:46:09.313832",
+    "last_seen": "2025-07-12T11:47:13.031802",
+    "interaction_count": 2
+  },
+  "8100489449": {
+    "user_id": 8100489449,
+    "username": "Meliboev_08",
+    "first_name": "Meliboevv",
+    "last_name": null,
+    "joined_date": "2025-07-12T13:30:50.711324",
+    "last_seen": "2025-07-12T13:31:18.963309",
+    "interaction_count": 2
+  },
+  "1155183456": {
+    "user_id": 1155183456,
+    "username": "esteboyy",
+    "first_name": "Ratel",
+    "last_name": "(^_^)",
+    "joined_date": "2025-07-12T15:25:11.889580",
+    "last_seen": "2025-07-12T15:25:11.889580",
+    "interaction_count": 1
+  },
+  "1305910780": {
+    "user_id": 1305910780,
+    "username": "Minionsmey",
+    "first_name": "Smey",
+    "last_name": null,
+    "joined_date": "2025-07-12T15:43:40.573222",
+    "last_seen": "2025-07-12T15:44:25.381861",
+    "interaction_count": 5
+  },
+  "8045236716": {
+    "user_id": 8045236716,
+    "username": "Gandonreal",
+    "first_name": "Verintta",
+    "last_name": "Maunte",
+    "joined_date": "2025-07-12T20:28:13.000519",
+    "last_seen": "2025-07-12T20:28:19.298613",
+    "interaction_count": 3
+  },
+  "7445297712": {
+    "user_id": 7445297712,
+    "username": "s1myu",
+    "first_name": "bērat `",
+    "last_name": null,
+    "joined_date": "2025-07-12T22:24:24.751211",
+    "last_seen": "2025-07-12T22:24:38.371717",
+    "interaction_count": 4
+  },
+  "5965236074": {
+    "user_id": 5965236074,
+    "username": null,
+    "first_name": "...",
+    "last_name": null,
+    "joined_date": "2025-07-13T01:07:34.690838",
+    "last_seen": "2025-07-13T01:07:34.690838",
+    "interaction_count": 1
+  },
+  "5731725593": {
+    "user_id": 5731725593,
+    "username": "danielaaron111",
+    "first_name": "Daniel A.",
+    "last_name": null,
+    "joined_date": "2025-07-13T02:47:01.763092",
+    "last_seen": "2025-07-13T02:47:01.763092",
+    "interaction_count": 1
+  },
+  "1565098706": {
+    "user_id": 1565098706,
+    "username": "wohako",
+    "first_name": "wohako",
+    "last_name": ".",
+    "joined_date": "2025-07-13T03:17:16.360938",
+    "last_seen": "2025-07-13T03:17:21.044798",
+    "interaction_count": 2
+  },
+  "335626636": {
+    "user_id": 335626636,
+    "username": "tnsu_xo",
+    "first_name": "tnsu",
+    "last_name": null,
+    "joined_date": "2025-07-13T03:18:17.970109",
+    "last_seen": "2025-07-13T03:18:17.970109",
+    "interaction_count": 1
+  },
+  "1643426425": {
+    "user_id": 1643426425,
+    "username": null,
+    "first_name": "~abhishek",
+    "last_name": null,
+    "joined_date": "2025-07-13T08:01:47.123083",
+    "last_seen": "2025-07-13T08:02:27.911380",
+    "interaction_count": 2
+  },
+  "6548329252": {
+    "user_id": 6548329252,
+    "username": "nihility20",
+    "first_name": "-_-",
+    "last_name": null,
+    "joined_date": "2025-07-13T09:45:08.046161",
+    "last_seen": "2025-07-13T09:45:18.679044",
+    "interaction_count": 2
+  },
+  "7235242057": {
+    "user_id": 7235242057,
+    "username": "leaveqq",
+    "first_name": "Salman Ozbakiy",
+    "last_name": null,
+    "joined_date": "2025-07-13T09:58:12.795195",
+    "last_seen": "2025-07-13T09:58:25.600981",
+    "interaction_count": 2
+  },
+  "7807779390": {
+    "user_id": 7807779390,
+    "username": null,
+    "first_name": "C",
+    "last_name": "A",
+    "joined_date": "2025-07-13T10:48:27.495061",
+    "last_seen": "2025-07-13T10:48:27.495061",
+    "interaction_count": 1
+  },
+  "7892836734": {
+    "user_id": 7892836734,
+    "username": "Lenaaz0",
+    "first_name": "Michael",
+    "last_name": null,
+    "joined_date": "2025-07-13T14:10:14.031362",
+    "last_seen": "2025-07-13T14:12:17.365376",
+    "interaction_count": 7
+  },
+  "8150593931": {
+    "user_id": 8150593931,
+    "username": null,
+    "first_name": "Jennifer .D.",
+    "last_name": "Williams",
+    "joined_date": "2025-07-13T15:05:28.986611",
+    "last_seen": "2025-07-13T15:05:39.047324",
+    "interaction_count": 2
+  },
+  "8155204617": {
+    "user_id": 8155204617,
+    "username": "Raja6646975",
+    "first_name": "Surend Gupta",
+    "last_name": null,
+    "joined_date": "2025-07-13T15:47:04.161880",
+    "last_seen": "2025-07-13T15:47:04.161880",
+    "interaction_count": 1
+  },
+  "7251993084": {
+    "user_id": 7251993084,
+    "username": null,
+    "first_name": "Regina",
+    "last_name": "Phelange",
+    "joined_date": "2025-07-13T18:27:06.960310",
+    "last_seen": "2025-07-13T18:27:06.960310",
+    "interaction_count": 1
+  },
+  "643482217": {
+    "user_id": 643482217,
+    "username": "cosminnnn",
+    "first_name": "Cosmin",
+    "last_name": null,
+    "joined_date": "2025-07-13T21:36:11.540396",
+    "last_seen": "2025-07-13T21:38:41.484000",
+    "interaction_count": 4
+  },
+  "7077672351": {
+    "user_id": 7077672351,
+    "username": null,
+    "first_name": "Ramdan",
+    "last_name": null,
+    "joined_date": "2025-07-14T02:00:24.973777",
+    "last_seen": "2025-07-14T03:03:00.730083",
+    "interaction_count": 2
+  },
+  "7797065241": {
+    "user_id": 7797065241,
+    "username": "v3433a",
+    "first_name": ".",
+    "last_name": null,
+    "joined_date": "2025-07-14T06:41:41.226964",
+    "last_seen": "2025-07-14T06:58:15.824248",
+    "interaction_count": 2
+  },
+  "7842503039": {
+    "user_id": 7842503039,
+    "username": null,
+    "first_name": "AS",
+    "last_name": null,
+    "joined_date": "2025-07-14T07:25:39.904206",
+    "last_seen": "2025-07-14T07:31:53.310188",
+    "interaction_count": 2
+  },
+  "7233978348": {
+    "user_id": 7233978348,
+    "username": "armando_uk1",
+    "first_name": "Armando",
+    "last_name": "🇦🇱🇬🇧",
+    "joined_date": "2025-07-14T12:33:01.451535",
+    "last_seen": "2025-07-14T12:35:15.775736",
+    "interaction_count": 3
+  },
+  "1045506484": {
+    "user_id": 1045506484,
+    "username": null,
+    "first_name": "Abacus",
+    "last_name": null,
+    "joined_date": "2025-07-14T12:46:48.275832",
+    "last_seen": "2025-07-14T12:46:48.275832",
+    "interaction_count": 1
+  },
+  "6564870736": {
+    "user_id": 6564870736,
+    "username": "Heykoreansis",
+    "first_name": "ㄷ",
+    "last_name": null,
+    "joined_date": "2025-07-14T13:45:39.873705",
+    "last_seen": "2025-07-14T13:46:49.039220",
+    "interaction_count": 3
+  },
+  "8142113478": {
+    "user_id": 8142113478,
+    "username": "G123opm",
+    "first_name": "G",
+    "last_name": null,
+    "joined_date": "2025-07-14T19:37:55.019983",
+    "last_seen": "2025-07-14T19:37:55.019983",
+    "interaction_count": 1
+  },
+  "845823811": {
+    "user_id": 845823811,
+    "username": null,
+    "first_name": "Jr",
+    "last_name": null,
+    "joined_date": "2025-07-14T21:02:43.703342",
+    "last_seen": "2025-07-14T21:02:43.703342",
+    "interaction_count": 1
+  },
+  "7861941527": {
+    "user_id": 7861941527,
+    "username": "DiegoGuichard",
+    "first_name": "Diego",
+    "last_name": null,
+    "joined_date": "2025-07-15T01:32:42.469139",
+    "last_seen": "2025-07-15T01:32:42.469139",
+    "interaction_count": 1
+  },
+  "7348790692": {
+    "user_id": 7348790692,
+    "username": "Aadhi_Vijay",
+    "first_name": "ആദി",
+    "last_name": "വിജയ്",
+    "joined_date": "2025-07-15T03:44:05.398973",
+    "last_seen": "2025-07-15T04:03:52.040736",
+    "interaction_count": 10
+  },
+  "5860694374": {
+    "user_id": 5860694374,
+    "username": null,
+    "first_name": "Anna",
+    "last_name": "L",
+    "joined_date": "2025-07-15T05:37:44.549991",
+    "last_seen": "2025-07-16T01:07:54.323294",
+    "interaction_count": 2
+  },
+  "7131547642": {
+    "user_id": 7131547642,
+    "username": "Rinu111111",
+    "first_name": "Roshani",
+    "last_name": null,
+    "joined_date": "2025-07-15T08:26:51.981246",
+    "last_seen": "2025-07-15T08:26:51.981246",
+    "interaction_count": 1
+  },
+  "6447499299": {
+    "user_id": 6447499299,
+    "username": "Cuteboy7860000",
+    "first_name": "JACK",
+    "last_name": null,
+    "joined_date": "2025-07-15T08:47:14.032096",
+    "last_seen": "2025-07-15T08:47:14.032096",
+    "interaction_count": 1
+  },
+  "7555103910": {
+    "user_id": 7555103910,
+    "username": null,
+    "first_name": "..",
+    "last_name": "Pqsdf",
+    "joined_date": "2025-07-15T08:50:20.841751",
+    "last_seen": "2025-07-15T08:50:41.141879",
+    "interaction_count": 2
+  },
+  "7198899411": {
+    "user_id": 7198899411,
+    "username": "Monza_k1",
+    "first_name": "Tdmer",
+    "last_name": "N1 m416",
+    "joined_date": "2025-07-15T09:07:38.042259",
+    "last_seen": "2025-07-15T09:08:00.891698",
+    "interaction_count": 3
+  },
+  "1072798178": {
+    "user_id": 1072798178,
+    "username": "llythes",
+    "first_name": "s meer",
+    "last_name": null,
+    "joined_date": "2025-07-15T11:57:15.834915",
+    "last_seen": "2025-07-15T11:57:41.013057",
+    "interaction_count": 5
+  },
+  "7730351127": {
+    "user_id": 7730351127,
+    "username": "OLD_NAYAK",
+    "first_name": "𝐋 𝐔 𝐂 𝐈 𝐅 𝐄 𝐑 🤤",
+    "last_name": null,
+    "joined_date": "2025-07-15T14:11:52.404643",
+    "last_seen": "2025-07-15T14:11:52.404643",
+    "interaction_count": 1
+  },
+  "6635941277": {
+    "user_id": 6635941277,
+    "username": "Momdadsisterbrotherme",
+    "first_name": "✈️",
+    "last_name": null,
+    "joined_date": "2025-07-15T14:31:40.988587",
+    "last_seen": "2025-07-15T14:49:37.604960",
+    "interaction_count": 2
+  },
+  "6688040585": {
+    "user_id": 6688040585,
+    "username": "gulmiiraa_m",
+    "first_name": "Gulmira",
+    "last_name": null,
+    "joined_date": "2025-07-15T14:41:33.730702",
+    "last_seen": "2025-07-15T14:44:39.855972",
+    "interaction_count": 3
+  },
+  "6193798016": {
+    "user_id": 6193798016,
+    "username": "tera_on",
+    "first_name": "TERA",
+    "last_name": null,
+    "joined_date": "2025-07-15T15:12:09.164394",
+    "last_seen": "2025-07-15T15:12:09.164394",
+    "interaction_count": 1
+  },
+  "6160896114": {
+    "user_id": 6160896114,
+    "username": "Tera_uz",
+    "first_name": "TERA",
+    "last_name": null,
+    "joined_date": "2025-07-15T15:13:09.401822",
+    "last_seen": "2025-07-15T15:13:09.401822",
+    "interaction_count": 1
+  },
+  "6023432512": {
+    "user_id": 6023432512,
+    "username": null,
+    "first_name": "Deivid",
+    "last_name": null,
+    "joined_date": "2025-07-15T16:05:42.050904",
+    "last_seen": "2025-07-15T16:05:51.410451",
+    "interaction_count": 3
+  },
+  "8177633183": {
+    "user_id": 8177633183,
+    "username": "Zeynab_1010",
+    "first_name": "زینب",
+    "last_name": null,
+    "joined_date": "2025-07-15T17:54:30.730120",
+    "last_seen": "2025-07-15T17:54:50.982328",
+    "interaction_count": 3
+  },
+  "1369545804": {
+    "user_id": 1369545804,
+    "username": "meritvajra",
+    "first_name": "Merit",
+    "last_name": "Vajra",
+    "joined_date": "2025-07-15T18:21:44.302204",
+    "last_seen": "2025-07-15T18:27:53.152559",
+    "interaction_count": 3
+  },
+  "5963893081": {
+    "user_id": 5963893081,
+    "username": null,
+    "first_name": "Lk",
+    "last_name": null,
+    "joined_date": "2025-07-15T21:19:07.265973",
+    "last_seen": "2025-07-15T21:19:07.265973",
+    "interaction_count": 1
+  },
+  "1760257765": {
+    "user_id": 1760257765,
+    "username": "Vardankumar23",
+    "first_name": "..",
+    "last_name": "..",
+    "joined_date": "2025-07-15T21:27:20.415448",
+    "last_seen": "2025-07-15T21:27:20.415448",
+    "interaction_count": 1
+  },
+  "7838928056": {
+    "user_id": 7838928056,
+    "username": "sinica_orig",
+    "first_name": "𝙎𝙄𝙉𝙄𝘾𝘼 / #Puplis #꒯ꏂꊰꊰ #ꅐꄲꋪꀘ / +777",
+    "last_name": null,
+    "joined_date": "2025-07-15T21:37:23.597339",
+    "last_seen": "2025-07-15T21:37:50.903729",
+    "interaction_count": 2
+  },
+  "7255051933": {
+    "user_id": 7255051933,
+    "username": null,
+    "first_name": "Sam",
+    "last_name": "Sam",
+    "joined_date": "2025-07-15T23:08:20.981496",
+    "last_seen": "2025-07-15T23:09:40.550677",
+    "interaction_count": 3
+  },
+  "7772976229": {
+    "user_id": 7772976229,
+    "username": "pycrusx",
+    "first_name": "Улуғбек Мирзо",
+    "last_name": null,
+    "joined_date": "2025-07-15T23:18:06.100508",
+    "last_seen": "2025-07-15T23:18:49.560344",
+    "interaction_count": 4
+  },
+  "6917188661": {
+    "user_id": 6917188661,
+    "username": "Xeo_me",
+    "first_name": "Annu",
+    "last_name": null,
+    "joined_date": "2025-07-15T23:23:20.688081",
+    "last_seen": "2025-07-15T23:23:20.688081",
+    "interaction_count": 1
+  },
+  "1016580238": {
+    "user_id": 1016580238,
+    "username": null,
+    "first_name": "Sushant",
+    "last_name": "Pal",
+    "joined_date": "2025-07-16T01:40:59.407676",
+    "last_seen": "2025-07-16T01:42:51.968582",
+    "interaction_count": 4
+  },
+  "1175438622": {
+    "user_id": 1175438622,
+    "username": null,
+    "first_name": "Anmol",
+    "last_name": null,
+    "joined_date": "2025-07-16T05:32:23.267516",
+    "last_seen": "2025-07-16T05:32:23.267516",
+    "interaction_count": 1
   }
 }

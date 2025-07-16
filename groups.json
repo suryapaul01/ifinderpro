@@ -20,5 +20,16 @@
     "last_interaction": "2025-07-11T08:27:19.605032",
     "interaction_count": 1,
     "is_active": false
+  },
+  "-1002853850167": {
+    "id": -1002853850167,
+    "title": "Notes",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-07-15T14:11:48.363259",
+    "last_interaction": "2025-07-15T15:49:19.158677",
+    "interaction_count": 2,
+    "is_active": false
   }
 }
