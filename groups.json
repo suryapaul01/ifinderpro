@@ -6,8 +6,8 @@
     "username": null,
     "invite_link": null,
     "added_date": "2025-07-08T15:50:49.436385",
-    "last_interaction": "2025-07-10T14:25:53.513608",
-    "interaction_count": 7,
+    "last_interaction": "2025-07-22T08:34:45.284399",
+    "interaction_count": 8,
     "is_active": true
   },
   "-1002580902357": {
@@ -30,6 +30,61 @@
     "added_date": "2025-07-15T14:11:48.363259",
     "last_interaction": "2025-07-15T15:49:19.158677",
     "interaction_count": 2,
+    "is_active": false
+  },
+  "-1002881353428": {
+    "id": -1002881353428,
+    "title": "мать твою ебал",
+    "type": "channel",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-07-17T21:38:21.471878",
+    "last_interaction": "2025-07-17T21:38:21.471878",
+    "interaction_count": 1,
+    "is_active": true
+  },
+  "-1002295515998": {
+    "id": -1002295515998,
+    "title": "ETM Reborn Stats",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-07-19T01:16:03.348993",
+    "last_interaction": "2025-07-19T01:16:42.457430",
+    "interaction_count": 3,
+    "is_active": true
+  },
+  "-4903002577": {
+    "id": -4903002577,
+    "title": "WorldsHub Manager",
+    "type": "group",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-07-20T19:07:11.323273",
+    "last_interaction": "2025-07-20T19:08:00.049590",
+    "interaction_count": 2,
+    "is_active": false
+  },
+  "-1002703392337": {
+    "id": -1002703392337,
+    "title": "Logs",
+    "type": "channel",
+    "username": "botlogschannelok",
+    "invite_link": null,
+    "added_date": "2025-07-26T09:47:52.999675",
+    "last_interaction": "2025-07-26T09:49:18.458443",
+    "interaction_count": 1,
+    "is_active": false
+  },
+  "-1001777634448": {
+    "id": -1001777634448,
+    "title": "Try",
+    "type": "supergroup",
+    "username": "hhhhkhhhk",
+    "invite_link": null,
+    "added_date": "2025-07-26T10:11:54.052022",
+    "last_interaction": "2025-07-26T10:12:22.018939",
+    "interaction_count": 1,
     "is_active": false
   }
 }
