@@ -6,5 +6,21 @@
       "max_warnings": 3,
       "auto_action": "mute"
     }
+  },
+  "-1002882840282": {
+    "warnings": {
+      "5684127843": [
+        {
+          "reason": "No reason provided",
+          "date": "2025-11-04T07:25:18.191649",
+          "admin_id": 1791345486
+        }
+      ]
+    },
+    "mutes": {},
+    "settings": {
+      "max_warnings": 3,
+      "auto_action": "mute"
+    }
   }
 }

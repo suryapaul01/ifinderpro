@@ -6,9 +6,9 @@
     "username": null,
     "invite_link": null,
     "added_date": "2025-07-08T15:50:49.436385",
-    "last_interaction": "2025-07-22T08:34:45.284399",
-    "interaction_count": 8,
-    "is_active": true
+    "last_interaction": "2025-11-04T07:49:50.778564",
+    "interaction_count": 10,
+    "is_active": false
   },
   "-1002580902357": {
     "id": -1002580902357,
@@ -831,8 +831,8 @@
     "username": null,
     "invite_link": null,
     "added_date": "2025-11-01T19:56:37.540230",
-    "last_interaction": "2025-11-02T19:42:45.632807",
-    "interaction_count": 7,
+    "last_interaction": "2025-11-04T15:12:30.264673",
+    "interaction_count": 10,
     "is_active": true
   },
   "-1002413519996": {
@@ -842,8 +842,8 @@
     "username": null,
     "invite_link": null,
     "added_date": "2025-11-01T20:08:48.024392",
-    "last_interaction": "2025-11-01T20:08:48.024392",
-    "interaction_count": 1,
+    "last_interaction": "2025-12-03T17:04:03.685813",
+    "interaction_count": 6,
     "is_active": true
   },
   "-1003108987025": {
@@ -864,8 +864,8 @@
     "username": null,
     "invite_link": null,
     "added_date": "2025-11-02T14:40:16.627417",
-    "last_interaction": "2025-11-02T14:40:16.627417",
-    "interaction_count": 1,
+    "last_interaction": "2025-11-14T17:40:38.430308",
+    "interaction_count": 2,
     "is_active": true
   },
   "-1003101087337": {
@@ -922,5 +922,258 @@
     "last_interaction": "2025-11-03T07:39:57.435494",
     "interaction_count": 1,
     "is_active": true
+  },
+  "-5046177182": {
+    "id": -5046177182,
+    "title": "mailer",
+    "type": "group",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-11-09T13:55:07.488534",
+    "last_interaction": "2025-11-09T13:56:34.805815",
+    "interaction_count": 6,
+    "is_active": true
+  },
+  "-1002374998997": {
+    "id": -1002374998997,
+    "title": "TORUS™ L.T.D [Community 🇮🇹]",
+    "type": "supergroup",
+    "username": "CryptoXloungechat",
+    "invite_link": null,
+    "added_date": "2025-11-11T19:55:16.567155",
+    "last_interaction": "2025-11-11T19:59:17.211550",
+    "interaction_count": 3,
+    "is_active": true
+  },
+  "-1003452351092": {
+    "id": -1003452351092,
+    "title": "Hamfekri",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-11-15T16:16:49.200750",
+    "last_interaction": "2025-11-24T12:56:20.864269",
+    "interaction_count": 2,
+    "is_active": false
+  },
+  "-1003313346628": {
+    "id": -1003313346628,
+    "title": "M2 Protocol — Community",
+    "type": "supergroup",
+    "username": "m2_protocol_chat",
+    "invite_link": null,
+    "added_date": "2025-11-16T01:40:21.552213",
+    "last_interaction": "2025-11-16T01:41:21.992824",
+    "interaction_count": 1,
+    "is_active": false
+  },
+  "-1003331055780": {
+    "id": -1003331055780,
+    "title": "Hunter",
+    "type": "channel",
+    "username": "hunterpremiu",
+    "invite_link": null,
+    "added_date": "2025-11-17T22:21:52.170095",
+    "last_interaction": "2025-11-17T22:21:52.170095",
+    "interaction_count": 1,
+    "is_active": true
+  },
+  "-1003293137048": {
+    "id": -1003293137048,
+    "title": "lalala",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-11-21T21:42:15.199481",
+    "last_interaction": "2025-11-21T22:01:34.478541",
+    "interaction_count": 3,
+    "is_active": false
+  },
+  "-1003271631340": {
+    "id": -1003271631340,
+    "title": "پژمان آندرماین",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-11-23T11:04:26.097026",
+    "last_interaction": "2025-11-23T11:27:06.360903",
+    "interaction_count": 2,
+    "is_active": false
+  },
+  "-1003084975425": {
+    "id": -1003084975425,
+    "title": "koruma",
+    "type": "channel",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-11-23T17:52:59.326405",
+    "last_interaction": "2025-11-23T17:52:59.326405",
+    "interaction_count": 1,
+    "is_active": true
+  },
+  "-1003306537859": {
+    "id": -1003306537859,
+    "title": "RedWhite Crew",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-11-24T18:18:48.940872",
+    "last_interaction": "2025-11-24T18:19:38.021662",
+    "interaction_count": 3,
+    "is_active": true
+  },
+  "-1003348674499": {
+    "id": -1003348674499,
+    "title": "🐨Aussie∞Market🐨",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-11-25T19:13:51.393437",
+    "last_interaction": "2025-11-28T10:10:29.827374",
+    "interaction_count": 1,
+    "is_active": false
+  },
+  "-4856056391": {
+    "id": -4856056391,
+    "title": "Group 1",
+    "type": "group",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-11-25T21:29:58.751334",
+    "last_interaction": "2025-11-25T22:20:22.976565",
+    "interaction_count": 5,
+    "is_active": true
+  },
+  "-1002740785493": {
+    "id": -1002740785493,
+    "title": "Moon",
+    "type": "channel",
+    "username": "niiightmoon",
+    "invite_link": null,
+    "added_date": "2025-11-26T04:08:04.298326",
+    "last_interaction": "2025-11-26T16:41:53.046405",
+    "interaction_count": 1,
+    "is_active": false
+  },
+  "-2072740785493": {
+    "id": -2072740785493,
+    "title": "Moon",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-11-26T04:08:04.482404",
+    "last_interaction": "2025-11-26T16:41:53.285728",
+    "interaction_count": 1,
+    "is_active": false
+  },
+  "-1003258668201": {
+    "id": -1003258668201,
+    "title": "micronimicron",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-12-06T16:41:15.423709",
+    "last_interaction": "2025-12-06T16:41:34.843494",
+    "interaction_count": 4,
+    "is_active": true
+  },
+  "-1003234807409": {
+    "id": -1003234807409,
+    "title": "Anonymous and Va",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-12-06T19:31:16.422481",
+    "last_interaction": "2025-12-06T19:31:16.422481",
+    "interaction_count": 1,
+    "is_active": true
+  },
+  "-1003407019950": {
+    "id": -1003407019950,
+    "title": "СФШТ • official channel",
+    "type": "channel",
+    "username": "SFSHTnews",
+    "invite_link": null,
+    "added_date": "2025-12-09T16:16:31.713533",
+    "last_interaction": "2025-12-09T16:16:31.713533",
+    "interaction_count": 1,
+    "is_active": true
+  },
+  "-4764690243": {
+    "id": -4764690243,
+    "title": "gruppo n8n",
+    "type": "group",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-12-09T16:25:43.545427",
+    "last_interaction": "2025-12-09T16:28:01.554337",
+    "interaction_count": 3,
+    "is_active": true
+  },
+  "-1003390459608": {
+    "id": -1003390459608,
+    "title": "Bots testing",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-12-13T01:53:54.356706",
+    "last_interaction": "2025-12-13T01:53:54.356706",
+    "interaction_count": 1,
+    "is_active": true
+  },
+  "-1003540862817": {
+    "id": -1003540862817,
+    "title": "Konkurs botdan tushgan leadlar",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-12-15T06:13:12.347452",
+    "last_interaction": "2025-12-15T06:14:21.565934",
+    "interaction_count": 4,
+    "is_active": false
+  },
+  "-1003518814974": {
+    "id": -1003518814974,
+    "title": "Anshu Civil",
+    "type": "channel",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-12-15T09:31:21.643735",
+    "last_interaction": "2025-12-15T09:57:47.389754",
+    "interaction_count": 1,
+    "is_active": false
+  },
+  "-5003681708": {
+    "id": -5003681708,
+    "title": "Netcity_Mikrotik_Lisans",
+    "type": "group",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-12-15T19:40:24.283951",
+    "last_interaction": "2025-12-15T19:40:24.283951",
+    "interaction_count": 1,
+    "is_active": true
+  },
+  "-1003656480243": {
+    "id": -1003656480243,
+    "title": "Netcity_Mikrotik_Lisans",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-12-15T19:42:05.381119",
+    "last_interaction": "2025-12-15T19:43:37.554346",
+    "interaction_count": 1,
+    "is_active": false
+  },
+  "-1003360500120": {
+    "id": -1003360500120,
+    "title": "RW Crew Supports",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-12-15T23:09:03.716306",
+    "last_interaction": "2025-12-15T23:09:37.369217",
+    "interaction_count": 1,
+    "is_active": false
   }
 }
