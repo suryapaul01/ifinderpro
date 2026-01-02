@@ -842,8 +842,8 @@
     "username": null,
     "invite_link": null,
     "added_date": "2025-11-01T20:08:48.024392",
-    "last_interaction": "2025-12-03T17:04:03.685813",
-    "interaction_count": 6,
+    "last_interaction": "2025-12-29T18:39:55.370589",
+    "interaction_count": 8,
     "is_active": true
   },
   "-1003108987025": {
@@ -941,8 +941,8 @@
     "username": "CryptoXloungechat",
     "invite_link": null,
     "added_date": "2025-11-11T19:55:16.567155",
-    "last_interaction": "2025-11-11T19:59:17.211550",
-    "interaction_count": 3,
+    "last_interaction": "2025-12-29T09:48:53.465348",
+    "interaction_count": 5,
     "is_active": true
   },
   "-1003452351092": {
@@ -1175,5 +1175,137 @@
     "last_interaction": "2025-12-15T23:09:37.369217",
     "interaction_count": 1,
     "is_active": false
+  },
+  "-1003347068486": {
+    "id": -1003347068486,
+    "title": "SASUKE",
+    "type": "channel",
+    "username": "sasukeeee_fkussq",
+    "invite_link": null,
+    "added_date": "2025-12-19T16:08:20.264882",
+    "last_interaction": "2025-12-19T16:08:20.264882",
+    "interaction_count": 1,
+    "is_active": true
+  },
+  "-1003325993121": {
+    "id": -1003325993121,
+    "title": "SASUKE [ BACKUP ]",
+    "type": "channel",
+    "username": "sasuke_backupp",
+    "invite_link": null,
+    "added_date": "2025-12-19T16:08:40.875272",
+    "last_interaction": "2025-12-19T16:08:40.875272",
+    "interaction_count": 1,
+    "is_active": true
+  },
+  "-1003584611636": {
+    "id": -1003584611636,
+    "title": "riseP2P",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-12-21T10:26:51.159784",
+    "last_interaction": "2025-12-24T10:49:43.258071",
+    "interaction_count": 11,
+    "is_active": true
+  },
+  "-1003374896058": {
+    "id": -1003374896058,
+    "title": "de",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-12-24T10:55:36.402657",
+    "last_interaction": "2025-12-24T11:03:27.033118",
+    "interaction_count": 4,
+    "is_active": true
+  },
+  "-1003646932457": {
+    "id": -1003646932457,
+    "title": "riseP2P Manage Order",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-12-24T11:01:03.570355",
+    "last_interaction": "2025-12-26T07:58:21.382301",
+    "interaction_count": 6,
+    "is_active": true
+  },
+  "-1003536939059": {
+    "id": -1003536939059,
+    "title": "TXT",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-12-24T17:30:31.326754",
+    "last_interaction": "2025-12-24T17:31:04.170108",
+    "interaction_count": 2,
+    "is_active": true
+  },
+  "-4809410927": {
+    "id": -4809410927,
+    "title": "PERI GUZELLIK MESAJ",
+    "type": "group",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-12-25T01:20:21.071295",
+    "last_interaction": "2025-12-25T01:21:28.461449",
+    "interaction_count": 1,
+    "is_active": false
+  },
+  "-1003254637293": {
+    "id": -1003254637293,
+    "title": "Nex and Djdjdjjssjjsjsdbot",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-12-25T09:51:53.428713",
+    "last_interaction": "2025-12-25T09:52:04.872211",
+    "interaction_count": 3,
+    "is_active": true
+  },
+  "-1003085673840": {
+    "id": -1003085673840,
+    "title": "@berk",
+    "type": "channel",
+    "username": "berktruy",
+    "invite_link": null,
+    "added_date": "2025-12-25T23:44:59.472299",
+    "last_interaction": "2026-01-01T09:21:23.921144",
+    "interaction_count": 1,
+    "is_active": false
+  },
+  "-1003523306281": {
+    "id": -1003523306281,
+    "title": "depositos",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-12-30T11:15:41.490612",
+    "last_interaction": "2025-12-30T11:17:01.147001",
+    "interaction_count": 2,
+    "is_active": true
+  },
+  "-1003661518562": {
+    "id": -1003661518562,
+    "title": "registratos",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-12-30T11:15:56.800186",
+    "last_interaction": "2025-12-30T11:15:56.800186",
+    "interaction_count": 1,
+    "is_active": true
+  },
+  "-1003602852046": {
+    "id": -1003602852046,
+    "title": "Sofie Sophie Leech",
+    "type": "supergroup",
+    "username": null,
+    "invite_link": null,
+    "added_date": "2025-12-30T17:02:24.586332",
+    "last_interaction": "2025-12-30T17:48:40.331476",
+    "interaction_count": 2,
+    "is_active": true
   }
 }
