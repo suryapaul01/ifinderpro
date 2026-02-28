@@ -82,6 +82,27 @@ class UserDatabase:
         """Get all user IDs for broadcasting"""
         return [int(user_id) for user_id in self.users.keys()]
 
+    def delete_user(self, user_id: int) -> bool:
+        """Delete a user from the database (e.g., blocked/deleted accounts)"""
+        user_id_str = str(user_id)
+        if user_id_str in self.users:
+            del self.users[user_id_str]
+            self._save_users()
+            return True
+        return False
+
+    def delete_users_batch(self, user_ids: List[int]) -> int:
+        """Delete multiple users at once (saves only once for performance)"""
+        deleted = 0
+        for uid in user_ids:
+            uid_str = str(uid)
+            if uid_str in self.users:
+                del self.users[uid_str]
+                deleted += 1
+        if deleted > 0:
+            self._save_users()
+        return deleted
+
     def get_all_users(self) -> dict:
         """Get all users data for export"""
         return self.users.copy()

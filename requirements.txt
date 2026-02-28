@@ -1,4 +1,4 @@
-python-telegram-bot[asyncio]>=20.0
+python-telegram-bot @ git+https://github.com/python-telegram-bot/python-telegram-bot.git@api_9.4
 aiosqlite>=0.18.0
 python-dotenv>=1.0.0
 requests>=2.28.0

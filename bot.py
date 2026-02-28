@@ -16,12 +16,19 @@ from group_commands import (
     pin_command, groupinfo_command, listadmins_command
 )
 
-# Set logging level to only show important messages
+# Suppress all logging output to terminal for clean operation
 logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
-    level=logging.WARNING  # Changed from INFO to WARNING to reduce log output
+    level=logging.CRITICAL  # Only show critical crashes, nothing else
 )
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.CRITICAL)
+
+# Also silence noisy third-party loggers
+logging.getLogger('httpx').setLevel(logging.CRITICAL)
+logging.getLogger('httpcore').setLevel(logging.CRITICAL)
+logging.getLogger('telegram').setLevel(logging.CRITICAL)
+logging.getLogger('telegram.ext').setLevel(logging.CRITICAL)
 
 # Conversation states
 SELECTING_ENTITY, SELECTING_CHAT, SELECTING_DONATION_METHOD, SELECTING_STARS_AMOUNT, SELECTING_TON_AMOUNT, WAITING_FOR_USERNAME, WAITING_FOR_MEMBER_USERNAME, NOTIFY_TEXT, NOTIFY_BUTTONS, NOTIFY_CONFIRM = range(10)
@@ -105,13 +112,15 @@ ADD_KEYBOARD = InlineKeyboardMarkup([
     [
         InlineKeyboardButton(
             text="➕ Add Bot to Group",
-            url="https://t.me/idfinderpro_bot?startgroup&admin=delete_messages+restrict_members"
+            url="https://t.me/idfinderpro_bot?startgroup&admin=delete_messages+restrict_members",
+            style="success"
         )
     ],
     [
         InlineKeyboardButton(
             text="🔙 Back to Main",
-            callback_data="main_menu"
+            callback_data="main_menu",
+            style="danger"
         )
     ]
 ])
@@ -119,50 +128,50 @@ ADD_KEYBOARD = InlineKeyboardMarkup([
 # Donation menu inline keyboard
 DONATION_KEYBOARD = InlineKeyboardMarkup([
     [
-        InlineKeyboardButton("⭐ Telegram Stars", callback_data='donate_stars'),
-        InlineKeyboardButton("💎 TON Crypto", callback_data='donate_ton'),
+        InlineKeyboardButton("⭐ Telegram Stars", callback_data='donate_stars', style="primary"),
+        InlineKeyboardButton("💎 TON Crypto", callback_data='donate_ton', style="primary"),
     ],
     [
-        InlineKeyboardButton("🔙 Back", callback_data='back_to_menu')
+        InlineKeyboardButton("🔙 Back", callback_data='back_to_menu', style="danger")
     ]
 ])
 
 STARS_KEYBOARD = InlineKeyboardMarkup([
     [
-        InlineKeyboardButton("1 ⭐", callback_data='stars_1'),
-        InlineKeyboardButton("5 ⭐", callback_data='stars_5'),
-        InlineKeyboardButton("10 ⭐", callback_data='stars_10'),
+        InlineKeyboardButton("1 ⭐", callback_data='stars_1', style="primary"),
+        InlineKeyboardButton("5 ⭐", callback_data='stars_5', style="primary"),
+        InlineKeyboardButton("10 ⭐", callback_data='stars_10', style="primary"),
     ],
     [
-        InlineKeyboardButton("20 ⭐", callback_data='stars_20'),
-        InlineKeyboardButton("50 ⭐", callback_data='stars_50'),
-        InlineKeyboardButton("100 ⭐", callback_data='stars_100'),
+        InlineKeyboardButton("20 ⭐", callback_data='stars_20', style="primary"),
+        InlineKeyboardButton("50 ⭐", callback_data='stars_50', style="primary"),
+        InlineKeyboardButton("100 ⭐", callback_data='stars_100', style="primary"),
     ],
     [
-        InlineKeyboardButton("500 ⭐", callback_data='stars_500'),
-        InlineKeyboardButton("1000 ⭐", callback_data='stars_1000'),
+        InlineKeyboardButton("500 ⭐", callback_data='stars_500', style="success"),
+        InlineKeyboardButton("1000 ⭐", callback_data='stars_1000', style="success"),
     ],
     [
-        InlineKeyboardButton("🔙 Back", callback_data='back_to_donate')
+        InlineKeyboardButton("🔙 Back", callback_data='back_to_donate', style="danger")
     ]
 ])
 
 TON_KEYBOARD = InlineKeyboardMarkup([
     [
-        InlineKeyboardButton("0.1 TON", callback_data='ton_0.1'),
-        InlineKeyboardButton("0.2 TON", callback_data='ton_0.2'),
-        InlineKeyboardButton("0.5 TON", callback_data='ton_0.5'),
+        InlineKeyboardButton("0.1 TON", callback_data='ton_0.1', style="primary"),
+        InlineKeyboardButton("0.2 TON", callback_data='ton_0.2', style="primary"),
+        InlineKeyboardButton("0.5 TON", callback_data='ton_0.5', style="primary"),
     ],
     [
-        InlineKeyboardButton("1 TON", callback_data='ton_1'),
-        InlineKeyboardButton("2 TON", callback_data='ton_2'),
+        InlineKeyboardButton("1 TON", callback_data='ton_1', style="primary"),
+        InlineKeyboardButton("2 TON", callback_data='ton_2', style="primary"),
     ],
     [
-        InlineKeyboardButton("5 TON", callback_data='ton_5'),
-        InlineKeyboardButton("10 TON", callback_data='ton_10'),
+        InlineKeyboardButton("5 TON", callback_data='ton_5', style="success"),
+        InlineKeyboardButton("10 TON", callback_data='ton_10', style="success"),
     ],
     [
-        InlineKeyboardButton("🔙 Back", callback_data='back_to_donate')
+        InlineKeyboardButton("🔙 Back", callback_data='back_to_donate', style="danger")
     ]
 ])
 
@@ -240,19 +249,19 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Create main help keyboard
     help_keyboard = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("👤 User Commands", callback_data="help_user"),
-            InlineKeyboardButton("👥 Group Commands", callback_data="help_group")
+            InlineKeyboardButton("👤 User Commands", callback_data="help_user", style="primary"),
+            InlineKeyboardButton("👥 Group Commands", callback_data="help_group", style="primary")
         ],
         [
-            InlineKeyboardButton("🤖 Bot Features", callback_data="help_features"),
-            InlineKeyboardButton("🔧 How to Use", callback_data="help_usage")
+            InlineKeyboardButton("🤖 Bot Features", callback_data="help_features", style="primary"),
+            InlineKeyboardButton("🔧 How to Use", callback_data="help_usage", style="primary")
         ],
         [
-            InlineKeyboardButton("💰 Donations", callback_data="help_donations"),
-            InlineKeyboardButton("ℹ️ About", callback_data="help_about")
+            InlineKeyboardButton("💰 Donations", callback_data="help_donations", style="primary"),
+            InlineKeyboardButton("ℹ️ About", callback_data="help_about", style="primary")
         ],
         [
-            InlineKeyboardButton("📋 Show All", callback_data="help_show_all")
+            InlineKeyboardButton("📋 Show All", callback_data="help_show_all", style="success")
         ]
     ])
 
@@ -278,8 +287,8 @@ async def handle_help_callback(update: Update, context: ContextTypes.DEFAULT_TYP
     # Navigation buttons
     nav_keyboard = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("🔙 Back", callback_data="help_back"),
-            InlineKeyboardButton("🏠 Menu", callback_data="help_menu")
+            InlineKeyboardButton("🔙 Back", callback_data="help_back", style="danger"),
+            InlineKeyboardButton("🏠 Menu", callback_data="help_menu", style="primary")
         ]
     ])
 
@@ -446,19 +455,19 @@ async def handle_help_callback(update: Update, context: ContextTypes.DEFAULT_TYP
             # Return to main help menu
             help_keyboard = InlineKeyboardMarkup([
                 [
-                    InlineKeyboardButton("👤 User Commands", callback_data="help_user"),
-                    InlineKeyboardButton("👥 Group Commands", callback_data="help_group")
+                    InlineKeyboardButton("👤 User Commands", callback_data="help_user", style="primary"),
+                    InlineKeyboardButton("👥 Group Commands", callback_data="help_group", style="primary")
                 ],
                 [
-                    InlineKeyboardButton("🤖 Bot Features", callback_data="help_features"),
-                    InlineKeyboardButton("🔧 How to Use", callback_data="help_usage")
+                    InlineKeyboardButton("🤖 Bot Features", callback_data="help_features", style="primary"),
+                    InlineKeyboardButton("🔧 How to Use", callback_data="help_usage", style="primary")
                 ],
                 [
-                    InlineKeyboardButton("💰 Donations", callback_data="help_donations"),
-                    InlineKeyboardButton("ℹ️ About", callback_data="help_about")
+                    InlineKeyboardButton("💰 Donations", callback_data="help_donations", style="primary"),
+                    InlineKeyboardButton("ℹ️ About", callback_data="help_about", style="primary")
                 ],
                 [
-                    InlineKeyboardButton("📋 Show All", callback_data="help_show_all")
+                    InlineKeyboardButton("📋 Show All", callback_data="help_show_all", style="success")
                 ]
             ])
 
@@ -1076,8 +1085,8 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"⭐ I've sent you an invoice for {amount} Stars.\n"
                 f"Please complete the payment process to support the developer.",
                 reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("🔙 Back to Donation Menu", callback_data='back_to_donate')],
-                    [InlineKeyboardButton("🏠 Main Menu", callback_data='back_to_menu')]
+                    [InlineKeyboardButton("🔙 Back to Donation Menu", callback_data='back_to_donate', style="danger")],
+                    [InlineKeyboardButton("🏠 Main Menu", callback_data='back_to_menu', style="primary")]
                 ])
             )
         except Exception as e:
@@ -1085,8 +1094,8 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.edit_message_text(
                 f"Sorry, there was an error processing your stars donation request. Please try again later.",
                 reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("🔙 Back to Donation Menu", callback_data='back_to_donate')],
-                    [InlineKeyboardButton("🏠 Main Menu", callback_data='back_to_menu')]
+                    [InlineKeyboardButton("🔙 Back to Donation Menu", callback_data='back_to_donate', style="danger")],
+                    [InlineKeyboardButton("🏠 Main Menu", callback_data='back_to_menu', style="primary")]
                 ])
             )
         
@@ -1104,9 +1113,9 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"💎 TON Donation - {amount} TON\n\n"
             f"To complete your donation, please click the button below to open TON Keeper and confirm your transaction.",
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("💰 Pay with TON Keeper", url=ton_payment_link)],
-                [InlineKeyboardButton("🔙 Back to Donation Menu", callback_data='back_to_donate')],
-                [InlineKeyboardButton("🏠 Main Menu", callback_data='back_to_menu')]
+                [InlineKeyboardButton("💰 Pay with TON Keeper", url=ton_payment_link, style="success")],
+                [InlineKeyboardButton("🔙 Back to Donation Menu", callback_data='back_to_donate', style="danger")],
+                [InlineKeyboardButton("🏠 Main Menu", callback_data='back_to_menu', style="primary")]
             ])
         )
         return SELECTING_ENTITY
@@ -1122,9 +1131,9 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Send files one by one, or skip to the next step:",
             parse_mode='HTML',
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🔘 Add Buttons", callback_data="notify_add_buttons")],
-                [InlineKeyboardButton("✅ Preview", callback_data="notify_preview")],
-                [InlineKeyboardButton("❌ Cancel", callback_data="notify_cancel")]
+                [InlineKeyboardButton("🔘 Add Buttons", callback_data="notify_add_buttons", style="primary")],
+                [InlineKeyboardButton("✅ Preview", callback_data="notify_preview", style="success")],
+                [InlineKeyboardButton("❌ Cancel", callback_data="notify_cancel", style="danger")]
             ])
         )
         return NOTIFY_BUTTONS
@@ -1133,11 +1142,16 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(
             "🔘 <b>Add Buttons</b>\n\n"
             "Send button information in this format:\n"
-            "<code>Button Text | https://example.com</code>\n\n"
-            "Examples:\n"
-            "• Visit Website | https://example.com\n"
-            "• Join Channel | https://t.me/channel\n"
-            "• Download App | https://play.google.com/store\n\n"
+            "<code>Button Text | URL</code>\n"
+            "<code>Button Text | URL | color</code>\n\n"
+            "🎨 <b>Available Colors:</b>\n"
+            "• <code>blue</code> — 📘 Primary (default)\n"
+            "• <code>green</code> — 📗 Success/CTA\n"
+            "• <code>red</code> — 📕 Danger/Urgent\n\n"
+            "📝 <b>Examples:</b>\n"
+            "• <code>Visit Website | https://example.com</code>\n"
+            "• <code>Join Channel | https://t.me/channel | green</code>\n"
+            "• <code>Limited Offer | https://example.com | red</code>\n\n"
             "Send one button per message:",
             parse_mode='HTML'
         )
@@ -1154,7 +1168,7 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(
             "❌ Notification cancelled.",
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🏠 Main Menu", callback_data="back_to_menu")]
+                [InlineKeyboardButton("🏠 Main Menu", callback_data="back_to_menu", style="primary")]
             ])
         )
         return SELECTING_ENTITY
@@ -1353,20 +1367,20 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Create analytics dashboard keyboard
     analytics_keyboard = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("📊 Overview", callback_data="analytics_overview"),
-            InlineKeyboardButton("👥 Users", callback_data="analytics_users")
+            InlineKeyboardButton("📊 Overview", callback_data="analytics_overview", style="primary"),
+            InlineKeyboardButton("👥 Users", callback_data="analytics_users", style="primary")
         ],
         [
-            InlineKeyboardButton("🏢 Groups", callback_data="analytics_groups"),
-            InlineKeyboardButton("📈 Interactions", callback_data="analytics_interactions")
+            InlineKeyboardButton("🏢 Groups", callback_data="analytics_groups", style="primary"),
+            InlineKeyboardButton("📈 Interactions", callback_data="analytics_interactions", style="primary")
         ],
         [
-            InlineKeyboardButton("📄 Users CSV", callback_data="analytics_export_users"),
-            InlineKeyboardButton("📊 Groups CSV", callback_data="analytics_export_groups")
+            InlineKeyboardButton("📄 Users CSV", callback_data="analytics_export_users", style="success"),
+            InlineKeyboardButton("📊 Groups CSV", callback_data="analytics_export_groups", style="success")
         ],
         [
-            InlineKeyboardButton("🔄 Refresh", callback_data="analytics_refresh"),
-            InlineKeyboardButton("🏠 Main Menu", callback_data="back_to_menu")
+            InlineKeyboardButton("🔄 Refresh", callback_data="analytics_refresh", style="primary"),
+            InlineKeyboardButton("🏠 Main Menu", callback_data="back_to_menu", style="danger")
         ]
     ])
 
@@ -1427,20 +1441,20 @@ async def handle_analytics_callback(update: Update, context: ContextTypes.DEFAUL
 
             analytics_keyboard = InlineKeyboardMarkup([
                 [
-                    InlineKeyboardButton("📊 Overview", callback_data="analytics_overview"),
-                    InlineKeyboardButton("👥 Users", callback_data="analytics_users")
+                    InlineKeyboardButton("📊 Overview", callback_data="analytics_overview", style="primary"),
+                    InlineKeyboardButton("👥 Users", callback_data="analytics_users", style="primary")
                 ],
                 [
-                    InlineKeyboardButton("🏢 Groups", callback_data="analytics_groups"),
-                    InlineKeyboardButton("📈 Interactions", callback_data="analytics_interactions")
+                    InlineKeyboardButton("🏢 Groups", callback_data="analytics_groups", style="primary"),
+                    InlineKeyboardButton("📈 Interactions", callback_data="analytics_interactions", style="primary")
                 ],
                 [
-                    InlineKeyboardButton("📄 Users CSV", callback_data="analytics_export_users"),
-                    InlineKeyboardButton("📊 Groups CSV", callback_data="analytics_export_groups")
+                    InlineKeyboardButton("📄 Users CSV", callback_data="analytics_export_users", style="success"),
+                    InlineKeyboardButton("📊 Groups CSV", callback_data="analytics_export_groups", style="success")
                 ],
                 [
-                    InlineKeyboardButton("🔄 Refresh", callback_data="analytics_refresh"),
-                    InlineKeyboardButton("🏠 Main Menu", callback_data="back_to_menu")
+                    InlineKeyboardButton("🔄 Refresh", callback_data="analytics_refresh", style="primary"),
+                    InlineKeyboardButton("🏠 Main Menu", callback_data="back_to_menu", style="danger")
                 ]
             ])
 
@@ -1504,7 +1518,7 @@ async def show_analytics_overview(query, context):
     )
 
     back_keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔙 Back to Dashboard", callback_data="analytics_refresh")]
+        [InlineKeyboardButton("🔙 Back to Dashboard", callback_data="analytics_refresh", style="primary")]
     ])
 
     await query.edit_message_text(overview_text, parse_mode='HTML', reply_markup=back_keyboard)
@@ -1554,7 +1568,7 @@ async def show_analytics_users(query, context):
         users_text += "• ⚠️ No growth this week\n"
 
     back_keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔙 Back to Dashboard", callback_data="analytics_refresh")]
+        [InlineKeyboardButton("🔙 Back to Dashboard", callback_data="analytics_refresh", style="primary")]
     ])
 
     await query.edit_message_text(users_text, parse_mode='HTML', reply_markup=back_keyboard)
@@ -1593,7 +1607,7 @@ async def show_analytics_groups(query, context):
         groups_text += f"{i}. {title}... ({interactions:,} interactions)\n"
 
     back_keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔙 Back to Dashboard", callback_data="analytics_refresh")]
+        [InlineKeyboardButton("🔙 Back to Dashboard", callback_data="analytics_refresh", style="primary")]
     ])
 
     await query.edit_message_text(groups_text, parse_mode='HTML', reply_markup=back_keyboard)
@@ -1635,7 +1649,7 @@ async def show_analytics_interactions(query, context):
     )
 
     back_keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔙 Back to Dashboard", callback_data="analytics_refresh")]
+        [InlineKeyboardButton("🔙 Back to Dashboard", callback_data="analytics_refresh", style="primary")]
     ])
 
     await query.edit_message_text(interactions_text, parse_mode='HTML', reply_markup=back_keyboard)
@@ -2113,9 +2127,9 @@ async def handle_notify_text(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
         # Success - show options for next step
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔘 Add Buttons", callback_data="notify_add_buttons")],
-            [InlineKeyboardButton("✅ Preview & Send", callback_data="notify_preview")],
-            [InlineKeyboardButton("❌ Cancel", callback_data="notify_cancel")]
+            [InlineKeyboardButton("🔘 Add Buttons", callback_data="notify_add_buttons", style="primary")],
+            [InlineKeyboardButton("✅ Preview & Send", callback_data="notify_preview", style="success")],
+            [InlineKeyboardButton("❌ Cancel", callback_data="notify_cancel", style="danger")]
         ])
 
         await message.reply_text(
@@ -2153,35 +2167,74 @@ async def handle_notify_buttons(update: Update, context: ContextTypes.DEFAULT_TY
 
     text = update.message.text
 
-    # Parse button format: "Button Text | https://example.com"
+    # Color mapping for user-friendly names
+    COLOR_MAP = {
+        'blue': 'primary',
+        'green': 'success',
+        'red': 'danger',
+        'primary': 'primary',
+        'success': 'success',
+        'danger': 'danger',
+    }
+
+    # Parse button format: "Button Text | URL" or "Button Text | URL | color"
     if '|' in text:
-        parts = text.split('|', 1)
-        button_text = parts[0].strip()
-        button_url = parts[1].strip()
+        parts = [p.strip() for p in text.split('|')]
 
-        if button_text and button_url:
-            button_info = {
-                'text': button_text,
-                'url': button_url
-            }
-            context.user_data['notification']['buttons'].append(button_info)
+        if len(parts) >= 2:
+            button_text = parts[0]
+            button_url = parts[1]
+            # Optional color (3rd part)
+            button_style = 'primary'  # default blue
+            if len(parts) >= 3 and parts[2].lower() in COLOR_MAP:
+                button_style = COLOR_MAP[parts[2].lower()]
 
-            await update.message.reply_text(
-                f"🔘 Button added: {button_text}\n\n"
-                f"Add more buttons or continue:",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("✅ Preview", callback_data="notify_preview")],
-                    [InlineKeyboardButton("❌ Cancel", callback_data="notify_cancel")]
-                ])
-            )
+            if button_text and button_url:
+                button_info = {
+                    'text': button_text,
+                    'url': button_url,
+                    'style': button_style
+                }
+                context.user_data['notification']['buttons'].append(button_info)
+
+                # Show color label
+                color_labels = {'primary': '📘 Blue', 'success': '📗 Green', 'danger': '📕 Red'}
+                color_label = color_labels.get(button_style, '📘 Blue')
+
+                await update.message.reply_text(
+                    f"✅ <b>Button added!</b>\n\n"
+                    f"🔘 <b>Text:</b> {button_text}\n"
+                    f"🔗 <b>URL:</b> {button_url}\n"
+                    f"🎨 <b>Color:</b> {color_label}\n\n"
+                    f"Send another button or continue:",
+                    parse_mode='HTML',
+                    reply_markup=InlineKeyboardMarkup([
+                        [InlineKeyboardButton("✅ Preview", callback_data="notify_preview", style="success")],
+                        [InlineKeyboardButton("❌ Cancel", callback_data="notify_cancel", style="danger")]
+                    ])
+                )
+            else:
+                await update.message.reply_text(
+                    "❌ Invalid format. Button text and URL cannot be empty."
+                )
         else:
             await update.message.reply_text(
-                "❌ Invalid format. Use: Button Text | https://example.com"
+                "❌ Invalid format. Use:\n"
+                "<code>Button Text | URL</code>\n"
+                "<code>Button Text | URL | color</code>\n\n"
+                "Colors: <code>blue</code>, <code>green</code>, <code>red</code>",
+                parse_mode='HTML'
             )
     else:
         await update.message.reply_text(
-            "❌ Invalid format. Use: Button Text | https://example.com\n\n"
-            "Example: Visit Website | https://example.com"
+            "❌ Invalid format. Use:\n"
+            "<code>Button Text | URL</code>\n"
+            "<code>Button Text | URL | color</code>\n\n"
+            "<b>Examples:</b>\n"
+            "• <code>Join Channel | https://t.me/channel</code>\n"
+            "• <code>Buy Now | https://shop.com | green</code>\n"
+            "• <code>Limited Offer | https://deal.com | red</code>",
+            parse_mode='HTML'
         )
 
     return NOTIFY_BUTTONS
@@ -2199,11 +2252,13 @@ async def handle_notify_preview(update: Update, context: ContextTypes.DEFAULT_TY
     total_users = user_db.get_total_users()
 
     # Show button details
+    color_labels = {'primary': '📘', 'success': '📗', 'danger': '📕'}
     button_details = ""
     if buttons:
         button_details = "\n<b>Buttons:</b>\n"
         for i, btn in enumerate(buttons, 1):
-            button_details += f"{i}. {btn['text']} → {btn['url']}\n"
+            color_icon = color_labels.get(btn.get('style', 'primary'), '📘')
+            button_details += f"{i}. {color_icon} {btn['text']} → {btn['url']}\n"
 
     preview_text = (
         f"📋 <b>Notification Preview</b>\n\n"
@@ -2215,8 +2270,8 @@ async def handle_notify_preview(update: Update, context: ContextTypes.DEFAULT_TY
     )
 
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("✅ Send Notification", callback_data="notify_send")],
-        [InlineKeyboardButton("❌ Cancel", callback_data="notify_cancel")]
+        [InlineKeyboardButton("✅ Send Notification", callback_data="notify_send", style="success")],
+        [InlineKeyboardButton("❌ Cancel", callback_data="notify_cancel", style="danger")]
     ])
 
     await query.edit_message_text(preview_text, parse_mode='HTML', reply_markup=keyboard)
@@ -2233,28 +2288,48 @@ async def send_notification(update: Update, context: ContextTypes.DEFAULT_TYPE):
     files = notification.get('files', [])
     buttons = notification.get('buttons', [])
 
-    # Create inline keyboard if buttons exist
+    # Create inline keyboard if buttons exist (with color support)
     keyboard = None
     if buttons:
         button_rows = []
         for button in buttons:
-            button_rows.append([InlineKeyboardButton(button['text'], url=button['url'])])
+            btn_style = button.get('style', 'primary')
+            button_rows.append([InlineKeyboardButton(
+                button['text'],
+                url=button['url'],
+                style=btn_style
+            )])
         keyboard = InlineKeyboardMarkup(button_rows)
 
     # Get all user IDs
     user_ids = user_db.get_all_user_ids()
+    total_users = len(user_ids)
 
     sent_count = 0
     failed_count = 0
+    dead_users = []  # Track blocked/deleted/deactivated accounts for cleanup
+
+    import asyncio
+    import time
+    from telegram.error import Forbidden, BadRequest
+
+    start_time = time.time()
 
     await query.edit_message_text(
-        f"📤 Starting to send notification to {len(user_ids)} users...",
+        f"📤 <b>Broadcasting...</b>\n\n"
+        f"👥 Recipients: {total_users:,}\n"
+        f"⏳ Status: Starting...",
         parse_mode='HTML'
     )
 
-    for user_id in user_ids:
+    # --- Fast async batched sending ---
+    BATCH_SIZE = 25  # Send 25 messages concurrently per batch
+    BATCH_DELAY = 1.0  # 1 second delay between batches (Telegram rate limit: ~30/sec)
+    PROGRESS_INTERVAL = 50  # Update progress every 50 users
+
+    async def send_to_user(uid):
+        """Send notification to a single user. Returns: 'sent', 'dead', or 'failed'."""
         try:
-            # Send files with captions if any
             if files:
                 for file_info in files:
                     caption = file_info.get('caption', '')
@@ -2262,7 +2337,7 @@ async def send_notification(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                     if file_info['type'] == 'photo':
                         await context.bot.send_photo(
-                            user_id,
+                            uid,
                             file_info['file_id'],
                             caption=caption,
                             caption_entities=caption_entities,
@@ -2270,7 +2345,7 @@ async def send_notification(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         )
                     elif file_info['type'] == 'video':
                         await context.bot.send_video(
-                            user_id,
+                            uid,
                             file_info['file_id'],
                             caption=caption,
                             caption_entities=caption_entities,
@@ -2278,35 +2353,101 @@ async def send_notification(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         )
                     elif file_info['type'] == 'document':
                         await context.bot.send_document(
-                            user_id,
+                            uid,
                             file_info['file_id'],
                             caption=caption,
                             caption_entities=caption_entities,
                             reply_markup=keyboard
                         )
             else:
-                # Send text message with original formatting entities
                 await context.bot.send_message(
-                    user_id,
+                    uid,
                     text,
-                    entities=entities,  # Use original entities instead of parse_mode
+                    entities=entities,
                     reply_markup=keyboard
                 )
-            sent_count += 1
+            return 'sent'
+        except Forbidden:
+            # User blocked the bot — mark for deletion
+            return 'dead'
+        except BadRequest:
+            # User account deleted/deactivated — mark for deletion
+            return 'dead'
+        except Exception:
+            # Other errors (network, rate limit, etc.) — don't delete, just skip
+            return 'failed'
 
-        except Exception as e:
-            logger.warning(f"Failed to send notification to user {user_id}: {e}")
-            failed_count += 1
+    # Process in batches
+    for i in range(0, total_users, BATCH_SIZE):
+        batch = user_ids[i:i + BATCH_SIZE]
+        results = await asyncio.gather(*[send_to_user(uid) for uid in batch])
+
+        for uid, result in zip(batch, results):
+            if result == 'sent':
+                sent_count += 1
+            elif result == 'dead':
+                failed_count += 1
+                dead_users.append(uid)
+            else:
+                failed_count += 1
+
+        processed = i + len(batch)
+
+        # Live progress update
+        if processed % PROGRESS_INTERVAL == 0 or processed == total_users:
+            elapsed = time.time() - start_time
+            speed = processed / elapsed if elapsed > 0 else 0
+            remaining = (total_users - processed) / speed if speed > 0 else 0
+            progress_pct = (processed / total_users) * 100
+
+            # Progress bar
+            filled = int(progress_pct / 5)
+            bar = '█' * filled + '░' * (20 - filled)
+
+            try:
+                await query.edit_message_text(
+                    f"📤 <b>Broadcasting...</b>\n\n"
+                    f"<code>[{bar}] {progress_pct:.0f}%</code>\n\n"
+                    f"✅ Sent: {sent_count:,}\n"
+                    f"❌ Failed: {failed_count:,}\n"
+                    f"🗑️ Dead accounts: {len(dead_users):,}\n"
+                    f"📊 Progress: {processed:,}/{total_users:,}\n"
+                    f"⚡ Speed: {speed:.0f} msg/sec\n"
+                    f"⏱️ ETA: {remaining:.0f}s remaining",
+                    parse_mode='HTML'
+                )
+            except Exception:
+                pass  # Ignore edit errors (rate limited or message unchanged)
+
+        # Rate limit delay between batches
+        if i + BATCH_SIZE < total_users:
+            await asyncio.sleep(BATCH_DELAY)
+
+    # --- Auto-cleanup: Remove dead accounts from database ---
+    cleaned_count = 0
+    if dead_users:
+        cleaned_count = user_db.delete_users_batch(dead_users)
 
     # Clean up notification data
     context.user_data.pop('notification', None)
 
+    elapsed_total = time.time() - start_time
+    avg_speed = total_users / elapsed_total if elapsed_total > 0 else 0
+    new_total = user_db.get_total_users()
+
     result_text = (
-        f"✅ <b>Notification Sent!</b>\n\n"
+        f"✅ <b>Broadcast Complete!</b>\n\n"
         f"📊 <b>Results:</b>\n"
-        f"• Successfully sent: {sent_count}\n"
-        f"• Failed: {failed_count}\n"
-        f"• Total users: {len(user_ids)}"
+        f"• ✅ Successfully sent: {sent_count:,}\n"
+        f"• ❌ Failed: {failed_count:,}\n"
+        f"• 👥 Total users: {total_users:,}\n\n"
+        f"🧹 <b>Database Cleanup:</b>\n"
+        f"• 🗑️ Dead accounts removed: {cleaned_count:,}\n"
+        f"• 👥 Active users remaining: {new_total:,}\n\n"
+        f"⚡ <b>Performance:</b>\n"
+        f"• Duration: {elapsed_total:.1f} seconds\n"
+        f"• Avg speed: {avg_speed:.0f} msg/sec\n"
+        f"• Batch size: {BATCH_SIZE} concurrent"
     )
 
     await context.bot.send_message(
@@ -2340,7 +2481,7 @@ async def handle_user_shared_from_other_screen(update: Update, context: ContextT
         "Or simply send /start to restart the bot.",
         parse_mode='HTML',
         reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("🏠 Back to Main Menu", callback_data="main_menu")]
+            [InlineKeyboardButton("🏠 Back to Main Menu", callback_data="main_menu", style="primary")]
         ])
     )
     return SELECTING_ENTITY
@@ -2356,7 +2497,7 @@ async def handle_chat_shared_from_other_screen(update: Update, context: ContextT
         "Or simply send /start to restart the bot.",
         parse_mode='HTML',
         reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("🏠 Back to Main Menu", callback_data="main_menu")]
+            [InlineKeyboardButton("🏠 Back to Main Menu", callback_data="main_menu", style="primary")]
         ])
     )
     return SELECTING_ENTITY
@@ -2373,7 +2514,7 @@ async def handle_message_from_other_screen(update: Update, context: ContextTypes
         "Or simply send /start to restart the bot.",
         parse_mode='HTML',
         reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("🏠 Back to Main Menu", callback_data="main_menu")]
+            [InlineKeyboardButton("🏠 Back to Main Menu", callback_data="main_menu", style="primary")]
         ])
     )
     return SELECTING_ENTITY
@@ -2471,46 +2612,16 @@ async def handle_my_chat_member(update: Update, context: ContextTypes.DEFAULT_TY
         logger.error(f"Error handling chat member update: {e}")
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
-    """Global error handler"""
+    """Global error handler — silently notifies admin via Telegram, no terminal spam"""
     try:
-        logger.error("=" * 50)
-        logger.error("🚨 GLOBAL ERROR HANDLER TRIGGERED")
-        logger.error(f"Exception while handling an update: {context.error}")
-        logger.error(f"Exception type: {type(context.error)}")
-
-        # Log full traceback for debugging
-        import traceback
-        logger.error(f"Full traceback:\n{traceback.format_exc()}")
-
-        # Log more details about the update for debugging
-        if update:
-            logger.error(f"Update type: {type(update)}")
-            if hasattr(update, 'effective_chat'):
-                logger.error(f"Chat ID: {update.effective_chat.id if update.effective_chat else 'None'}")
-                logger.error(f"Chat type: {update.effective_chat.type if update.effective_chat else 'None'}")
-            if hasattr(update, 'effective_user'):
-                logger.error(f"User ID: {update.effective_user.id if update.effective_user else 'None'}")
-            if hasattr(update, 'message'):
-                logger.error(f"Message exists: {update.message is not None}")
-                if update.message:
-                    logger.error(f"Message text: {getattr(update.message, 'text', 'No text')}")
-            if hasattr(update, 'callback_query'):
-                logger.error(f"Callback query exists: {update.callback_query is not None}")
-                if update.callback_query:
-                    logger.error(f"Callback data: {getattr(update.callback_query, 'data', 'No data')}")
-        else:
-            logger.error("Update is None or not available")
-
-        # Try to send error message to admin
+        # Try to send error message to admin (silently, no terminal output)
         if update and hasattr(update, 'effective_chat') and update.effective_chat and ADMIN_IDS and len(ADMIN_IDS) > 0:
             try:
-                # Convert first admin ID to int if it's a string
                 first_admin_id = int(ADMIN_IDS[0]) if ADMIN_IDS[0] and ADMIN_IDS[0].strip() else None
                 if first_admin_id:
-                    # Get error details safely
-                    error_str = str(context.error)
+                    error_str = str(context.error)[:200]  # Truncate long errors
                     chat_id = update.effective_chat.id if update.effective_chat else 'Unknown'
-                    user_id = update.effective_user.id if update.effective_user else 'Unknown'
+                    user_id = update.effective_user.id if hasattr(update, 'effective_user') and update.effective_user else 'Unknown'
 
                     await context.bot.send_message(
                         chat_id=first_admin_id,
@@ -2520,18 +2631,10 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
                              f"User ID: {user_id}",
                         parse_mode='HTML'
                     )
-            except Exception as admin_error:
-                logger.error(f"Could not send error to admin: {admin_error}")
-        else:
-            logger.error("Cannot send error to admin - missing update info or admin IDs")
-
-        logger.error("=" * 50)
-
-    except Exception as e:
-        logger.error(f"Error in error handler: {e}")
-        logger.error(f"Error handler exception type: {type(e)}")
-        import traceback
-        logger.error(f"Error handler traceback:\n{traceback.format_exc()}")
+            except Exception:
+                pass  # Silently ignore if can't reach admin
+    except Exception:
+        pass  # Silently ignore all errors in error handler
 
 async def detect_existing_groups(bot):
     """Detect and track groups where the bot is already added"""
@@ -2698,9 +2801,35 @@ async def mem_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     return SELECTING_ENTITY
 
+def start_health_check_server():
+    """Start a lightweight HTTP server for Koyeb health checks"""
+    import os
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+
+    class HealthCheckHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b'OK')
+
+        def log_message(self, format, *args):
+            pass  # Suppress health check logs
+
+    port = int(os.environ.get('PORT', 8000))
+    server = HTTPServer(('0.0.0.0', port), HealthCheckHandler)
+
+    import threading
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    print(f"✅ Health check server running on port {port}")
+
 def main():
-    # Print startup message
-    print("ID Finder Pro Bot is starting...")
+    # Start health check server for Koyeb
+    start_health_check_server()
+
+    # Clean startup message
+    print("🤖 ID Finder Pro Bot is starting...")
     
     application = Application.builder().token(BOT_TOKEN).build()
     
@@ -2865,7 +2994,7 @@ def main():
             scope={'type': 'all_group_chats'}
         )
 
-        print("Bot commands have been set for private chats and groups!")
+        print("✅ Bot commands set successfully!")
 
         # Detect and track existing groups
         await detect_existing_groups(app.bot)
@@ -2880,10 +3009,10 @@ def main():
     application.add_handler(ChatMemberHandler(handle_my_chat_member, ChatMemberHandler.MY_CHAT_MEMBER))
 
     # Print ready message
-    print("Bot is ready! Press Ctrl+C to stop.")
+    print("🚀 Bot is running! Press Ctrl+C to stop.")
     
     # Start the bot
-    application.run_polling()
+    application.run_polling(drop_pending_updates=True)
 
 if __name__ == '__main__':
     main() 
